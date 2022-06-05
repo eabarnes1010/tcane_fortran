@@ -1,5 +1,5 @@
 !==============================================================================
-! shash.f95                                                          (06.03.22)
+! shash.f95                                                          (06.04.22)
 !
 ! FORTRAN-based sinh-arcsinh normal (SHASH) distribution utility functions.
 !
@@ -50,10 +50,17 @@
 ! Dr. Randal J. Barnes
 ! Department of Civil, Environmental, and Geo- Engineering
 ! University of Minnesota
+! Minneapolis, MN, 55455
 !
 ! Dr. Elizabeth Barnes
 ! Department of Atmospheric Science
 ! Colorado State University
+! Fort Collins, CO, 80525
+!
+! Dr. Mark DeMaria
+! Cooperative Institute for Research in the Atmosphere
+! Colorado State University
+! Fort Collins, CO, 80523
 !==============================================================================
 MODULE shash_module
 IMPLICIT NONE
@@ -215,7 +222,7 @@ ELEMENTAL FUNCTION quantile(pr, mu, sigma, nu, tau)
     REAL(8), INTENT(IN) :: pr, mu, sigma, nu, tau
 
     REAL(8) :: xi, eta, eps, delta
-    REAL(8) :: y, z
+    REAL(8) :: z
 
     CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
 
@@ -381,19 +388,17 @@ END FUNCTION rational_approximation
 ! https://www.johndcook.com/blog/normal_cdf_inverse/.
 !------------------------------------------------------------------------------
 ELEMENTAL FUNCTION gaussian_cdf_inv(pr)
-    USE, INTRINSIC :: IEEE_ARITHMETIC
-
     REAL(8) :: gaussian_cdf_inv
     REAL(8), INTENT(IN) :: pr
 
     IF (pr <= 0.0) THEN
-        gaussian_cdf_inv = IEEE_VALUE(1.0, IEEE_QUIET_NAN)
+        gaussian_cdf_inv = -HUGE(1.0_8)
     ELSE IF (pr < 0.5) THEN
         gaussian_cdf_inv = -rational_approximation( SQRT(-2.0*LOG(pr)) )
     ELSE IF (pr < 1.0) THEN
         gaussian_cdf_inv = rational_approximation( SQRT(-2.0*LOG(1.0 - pr)) )
     ELSE
-        gaussian_cdf_inv = IEEE_VALUE(1.0, IEEE_QUIET_NAN)
+        gaussian_cdf_inv = HUGE(1.0_8)
     END IF
 END FUNCTION gaussian_cdf_inv
 

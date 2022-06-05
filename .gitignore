@@ -36,3 +36,14 @@ __pycache__/
 
 # Google docs
 *.gslides
+
+# Fortran stuff
+bin/
+obj/
+.cbp
+.depend
+.layout
+
+# LaTeX stuff
+TeXAux/
+.synctex

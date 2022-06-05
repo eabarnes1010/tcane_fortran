@@ -1,5 +1,5 @@
 !==============================================================================
-! test_shash.f95                                                     (06.03.22)
+! test_shash.f95                                                     (06.04.22)
 !
 ! Test the FORTRAN-based sinh-arcsinh normal distribution utility functions.
 !
@@ -21,10 +21,17 @@
 ! Dr. Randal J. Barnes
 ! Department of Civil, Environmental, and Geo- Engineering
 ! University of Minnesota
+! Minneapolis, MN, 55455
 !
 ! Dr. Elizabeth Barnes
 ! Department of Atmospheric Science
 ! Colorado State University
+! Fort Collins, CO, 80525
+!
+! Dr. Mark DeMaria
+! Cooperative Institute for Research in the Atmosphere
+! Colorado State University
+! Fort Collins, CO, 80523
 !==============================================================================
 
 PROGRAM main
@@ -83,7 +90,7 @@ SUBROUTINE test_quantile()
     IMPLICIT NONE
 
     REAL(8), DIMENSION(4) :: pr, mu, sigma, nu, tau
-    REAL(8), DIMENSION( SIZE(pr) ) :: computed, truth, computed_cdf
+    REAL(8), DIMENSION( SIZE(pr) ) :: computed, truth
 
     pr    = (/ 0.1, 0.3, 0.6, 0.8 /)
     mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
@@ -104,7 +111,7 @@ SUBROUTINE test_quantile_random()
 
     INTEGER, PARAMETER :: NTESTS = 1000
     REAL(8), DIMENSION(NTESTS) :: pr, mu, sigma, nu, tau
-    REAL(8), DIMENSION(NTESTS) :: computed, truth, computed_cdf
+    REAL(8), DIMENSION(NTESTS) :: computed, computed_cdf
 
     CALL RANDOM_NUMBER(pr)
     CALL RANDOM_NUMBER(mu)
@@ -144,7 +151,7 @@ SUBROUTINE test_median_random()
 
     INTEGER, PARAMETER :: NTESTS = 1000
     REAL(8), DIMENSION(NTESTS) :: pr, mu, sigma, nu, tau
-    REAL(8), DIMENSION(NTESTS) :: computed, truth, computed_cdf
+    REAL(8), DIMENSION(NTESTS) :: computed, computed_cdf
 
     CALL RANDOM_NUMBER(pr)
     CALL RANDOM_NUMBER(mu)
