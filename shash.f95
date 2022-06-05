@@ -23,7 +23,7 @@
 ! * The sinh-arcsinh normal distribution was defined in [1]. A more accessible,
 ! though less comprehensive, presentation is given in [2].
 !
-! * These functions are all writen as ELEMENTAL.  As such, they may be called
+! * These functions are all written as ELEMENTAL.  As such, they may be called
 ! with scalar arguments, or with array arguments -- as long as all of the
 ! arrays are commensurate.
 !
@@ -209,11 +209,8 @@ END FUNCTION cdf
 !
 ! Notes
 ! -----
-! * This is an approximation. The error on z is bounded by |error| < 4.5e-4.
-!   The error on the reported quantiles will be even worse.
-!
-! * We can improve this approximation by applying Newton's method or bisection
-!   on the SHASH cdf function.  This falls into the "TODO" category.
+! * This function uses Newton's method, with a pretty good starting guess.
+!   The result is accurate but a bit slow.
 !
 ! * If pr is out of the range 0 < pr < 1, this function fails.
 !------------------------------------------------------------------------------
@@ -222,13 +219,29 @@ ELEMENTAL FUNCTION quantile(pr, mu, sigma, nu, tau)
     REAL(8), INTENT(IN) :: pr, mu, sigma, nu, tau
 
     REAL(8) :: xi, eta, eps, delta
-    REAL(8) :: z
+    REAL(8) :: z, x
+
+    INTEGER :: iteration
+    INTEGER, PARAMETER :: MAX_ITERATION = 5
+
+    REAL(8) :: difference
+    REAL(8), PARAMETER :: MAX_ABS_DIFFERENCE = 1.0e-6
 
     CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
 
-    ! Apply Jones and Pewsey (2009) bottom of page 762.
+    ! Apply Jones and Pewsey (2009) bottom of page 762, and an approximate
+    ! Gaussian cdf inverse, to get an initial approximation.
     z = gaussian_cdf_inv(pr)
-    quantile = xi + eta * SINH((ASINH(z) + eps) / delta)
+    x = xi + eta * SINH((ASINH(z) + eps) / delta)
+
+    ! Improve the approximation using Newton's method.
+    DO iteration = 1, MAX_ITERATION
+        difference = cdf(x, mu, sigma, nu, tau) - pr
+        x = x - difference/pdf(x, mu, sigma, nu, tau)
+        IF (ABS(difference) <= MAX_ABS_DIFFERENCE) EXIT
+    END DO
+
+    quantile = x
 END FUNCTION quantile
 
 
