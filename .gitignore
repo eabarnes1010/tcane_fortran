@@ -40,9 +40,9 @@ __pycache__/
 # Fortran stuff
 bin/
 obj/
-.cbp
-.depend
-.layout
+*.cbp
+*.depend
+*.layout
 
 # LaTeX stuff
 TeXAux/
