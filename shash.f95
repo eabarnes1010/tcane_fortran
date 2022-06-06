@@ -19,19 +19,19 @@
 !
 ! quantile(pr, mu, sigma, nu, tau)
 !   Compute the SHASH inverse cumulative distribution function: that is,
-!   find x such that cdf(x) = pr. This is an approximate function.
+!   find x such that cdf(x) = pr.
+!   * pr, mu, sigma, nu, and tau may be scalars.
+!   * pr, mu, sigma, nu, and tau may be commensurate arrays.
 !
 ! median(mu, sigma, nu, tau)
 !   Compute the distribution median.
+!   * mu, sigma, nu, and tau may be scalars.
+!   * mu, sigma, nu, and tau may be commensurate arrays.
 !
 ! Notes
 ! -----
 ! * The sinh-arcsinh normal distribution was defined in [1]. A more accessible,
 ! though less comprehensive, presentation is given in [2].
-!
-! * These functions are all written as ELEMENTAL.  As such, they may be called
-! with scalar arguments, or with array arguments -- as long as all of the
-! arrays are commensurate.
 !
 ! * This code was tested using:
 !   GNU Fortran (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 8.1.0
@@ -96,8 +96,8 @@ PUBLIC median
 !---------------------------------------------------------------------------
 ! Mathematical constants
 !---------------------------------------------------------------------------
-REAL(8), PARAMETER, PRIVATE :: ONE_OVER_SQRT_TWO    = 0.7071067811865475244008444
-REAL(8), PARAMETER, PRIVATE :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461
+REAL(8), PARAMETER :: ONE_OVER_SQRT_TWO    = 0.7071067811865475244008444
+REAL(8), PARAMETER :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461
 
 CONTAINS
 
