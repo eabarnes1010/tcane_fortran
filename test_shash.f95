@@ -1,5 +1,5 @@
 !==============================================================================
-! test_shash.f95                                                     (06.04.22)
+! test_shash.f95                                                     (06.05.22)
 !
 ! Test the FORTRAN-based sinh-arcsinh normal distribution utility functions.
 !
@@ -35,7 +35,9 @@
 !==============================================================================
 
 PROGRAM main
-    CALL test_pdf()
+    CALL test_pdf_elemental()
+    CALL test_pdf_x_array()
+
     CALL test_cdf()
     CALL test_quantile()
     CALL test_quantile_random()
@@ -45,7 +47,7 @@ END PROGRAM main
 
 
 !------------------------------------------------------------------------------
-SUBROUTINE test_pdf()
+SUBROUTINE test_pdf_elemental()
     USE shash_module
     IMPLICIT NONE
 
@@ -60,8 +62,28 @@ SUBROUTINE test_pdf()
 
     computed = pdf(x, mu, sigma, nu, tau)
     truth    = (/ 0.48394145, 0.35682481, 0.21718473, 0.1577138 /)
-    WRITE(*,*) 'test_pdf:                  max_abs_error = ', MAXVAL(ABS(computed-truth))
-END SUBROUTINE test_pdf
+    WRITE(*,*) 'test_pdf_elemental:        max_abs_error = ', MAXVAL(ABS(computed-truth))
+END SUBROUTINE test_pdf_elemental
+
+
+!------------------------------------------------------------------------------
+SUBROUTINE test_pdf_x_array()
+    USE shash_module
+    IMPLICIT NONE
+
+    REAL(8) :: x(4), mu, sigma, nu, tau
+    REAL(8), DIMENSION( SIZE(x) ) :: computed, truth
+
+    x     = (/ 1.5, 2.5, 3.5, 4.5 /)
+    mu    = 1.5
+    sigma = 2.0
+    nu    = 1.5
+    tau   = 1.5
+
+    computed = pdf(x, mu, sigma, nu, tau)
+    truth    = (/ 0.069731, 0.16752543, 0.11880247, 0.08460783 /)
+    WRITE(*,*) 'test_pdf_x_array:          max_abs_error = ', MAXVAL(ABS(computed-truth))
+END SUBROUTINE test_pdf_x_array
 
 
 !------------------------------------------------------------------------------

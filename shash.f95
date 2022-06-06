@@ -1,5 +1,5 @@
 !==============================================================================
-! shash.f95                                                          (06.04.22)
+! shash.f95                                                          (06.05.22)
 !
 ! FORTRAN-based sinh-arcsinh normal (SHASH) distribution utility functions.
 !
@@ -64,10 +64,23 @@
 !==============================================================================
 MODULE shash_module
 IMPLICIT NONE
+PRIVATE
 
-PUBLIC  :: pdf, cdf, quantile, median
+!------------------------------------------------------------------------------
+! Interface block
+!------------------------------------------------------------------------------
+INTERFACE pdf
+   MODULE PROCEDURE pdf_elemental
+   MODULE PROCEDURE pdf_x_array
+END INTERFACE
 
-PRIVATE :: convert_tf_to_jp, rational_approximation, gaussian_cdf_inv
+!------------------------------------------------------------------------------
+! Visibility
+!------------------------------------------------------------------------------
+PUBLIC pdf
+PUBLIC cdf
+PUBLIC quantile
+PUBLIC median
 
 !---------------------------------------------------------------------------
 ! Mathematical constants
@@ -78,7 +91,7 @@ REAL(8), PARAMETER, PRIVATE :: ONE_OVER_SQRT_TWO_PI = 0.398942280401432677939946
 CONTAINS
 
 !------------------------------------------------------------------------------
-! FUNCTION pdf(x, mu, sigma, nu, tau)
+! FUNCTION pdf_elemental(x, mu, sigma, nu, tau)
 !
 ! Compute the SHASH probability density function (pdf).
 !
@@ -108,8 +121,14 @@ CONTAINS
 ! pdf : real scalar
 !   The computed shash(mu, sigma, nu, tau) probability density function
 !   evaluated at x.
+!
+! Notes
+! -----
+! * This function is ELEMENTAL, so it may be called with scalar arguments. It
+!   may also be called with array arguments as long as all of the arrays are
+!   commensurate.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION pdf(x, mu, sigma, nu, tau)
+ELEMENTAL FUNCTION pdf_elemental(x, mu, sigma, nu, tau) RESULT(pdf)
     REAL(8) :: pdf
     REAL(8), INTENT(IN) :: x, mu, sigma, nu, tau
 
@@ -122,7 +141,55 @@ ELEMENTAL FUNCTION pdf(x, mu, sigma, nu, tau)
     y = (x - xi) / eta
     z = SINH(delta * ASINH(y) - eps)
     pdf = ONE_OVER_SQRT_TWO_PI * (delta / eta) * SQRT((1.0 + z*z) / (1.0 + y*y)) * EXP(-z*z / 2.0)
-END FUNCTION pdf
+END FUNCTION pdf_elemental
+
+!------------------------------------------------------------------------------
+! FUNCTION pdf_x_array(x, mu, sigma, nu, tau)
+!
+! Compute the SHASH probability density function (pdf) for an array x.
+!
+! Parameters
+! ----------
+! x : real array
+!   The values at which to compute the SHASH probability density function.
+!
+! mu : real scalar
+!   The location parameter.
+!   TensorFlow calls this "loc".
+!
+! sigma : real scalar
+!   The scale parameter. Must be strictly positive.
+!   TensorFlow calls this "scale".
+!
+! nu : real scalar
+!   The skewness parameter.
+!   TensorFlow calls this "skewness".
+!
+! tau : real scalar
+!   The tail-weight parameter. Must be strictly positive.
+!   TensorFlow calls this "tailweight".
+!
+! Returns
+! -------
+! pdf : real array
+!   The computed shash(mu, sigma, nu, tau) probability density function
+!   evaluated at x.  pdf is the same size as x.
+!------------------------------------------------------------------------------
+PURE FUNCTION pdf_x_array(x, mu, sigma, nu, tau) RESULT(pdf)
+    REAL(8), INTENT(IN) :: x(:)
+    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
+    REAL(8), DIMENSION( SIZE(x) ) :: pdf
+
+    REAL(8) :: xi, eta, eps, delta
+    REAL(8), DIMENSION( SIZE(x) ) :: y, z
+
+    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+
+    ! Apply Jones and Pewsey (2009) Equation (2) on page 762.
+    y = (x - xi) / eta
+    z = SINH(delta * ASINH(y) - eps)
+    pdf = ONE_OVER_SQRT_TWO_PI * (delta / eta) * SQRT((1.0 + z*z) / (1.0 + y*y)) * EXP(-z*z / 2.0)
+END FUNCTION pdf_x_array
 
 
 !------------------------------------------------------------------------------
@@ -156,6 +223,12 @@ END FUNCTION pdf
 ! cdf : real scalar
 !   The computed shash(mu, sigma, nu, tau) cumulative distribution function
 !   evaluated at x.
+!
+! Notes
+! -----
+! * This function is ELEMENTAL, so it may be called with scalar arguments. It
+!   may also be called with array arguments as long as all of the arrays are
+!   commensurate.
 !------------------------------------------------------------------------------
 ELEMENTAL FUNCTION cdf(x, mu, sigma, nu, tau)
     REAL(8) :: cdf
@@ -209,8 +282,12 @@ END FUNCTION cdf
 !
 ! Notes
 ! -----
+! * This function is ELEMENTAL, so it may be called with scalar arguments. It
+!   may also be called with array arguments as long as all of the arrays are
+!   commensurate.
+!
 ! * This function uses Newton's method, with a pretty good starting guess.
-!   The result is accurate but a bit slow.
+!   The result is accurate (|error in pr| < 1e-6), but it is a bit slow.
 !
 ! * If pr is out of the range 0 < pr < 1, this function fails.
 !------------------------------------------------------------------------------
