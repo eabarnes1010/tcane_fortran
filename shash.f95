@@ -1,5 +1,5 @@
 !==============================================================================
-! shash.f95                                                          (06.05.22)
+! shash.f95                                                          (06.06.22)
 !
 ! FORTRAN-based sinh-arcsinh normal (SHASH) distribution utility functions.
 !
@@ -7,9 +7,15 @@
 ! ----------------
 ! pdf(x, mu, sigma, nu, tau)
 !   Compute the SHASH probability density function (pdf).
+!   * x, mu, sigma, nu, and tau may be scalars.
+!   * x, mu, sigma, nu, and tau may be commensurate arrays.
+!   * x may be an array with mu, sigma, nu, and tau scalars.
 !
 ! cdf(x, mu, sigma, nu, tau)
 !   Compute the SHASH cumulative distribution function (cdf).
+!   * x, mu, sigma, nu, and tau may be scalars.
+!   * x, mu, sigma, nu, and tau may be commensurate arrays.
+!   * x may be an array with mu, sigma, nu, and tau scalars.
 !
 ! quantile(pr, mu, sigma, nu, tau)
 !   Compute the SHASH inverse cumulative distribution function: that is,
@@ -72,6 +78,11 @@ PRIVATE
 INTERFACE pdf
    MODULE PROCEDURE pdf_elemental
    MODULE PROCEDURE pdf_x_array
+END INTERFACE
+
+INTERFACE cdf
+   MODULE PROCEDURE cdf_elemental
+   MODULE PROCEDURE cdf_x_array
 END INTERFACE
 
 !------------------------------------------------------------------------------
@@ -193,7 +204,7 @@ END FUNCTION pdf_x_array
 
 
 !------------------------------------------------------------------------------
-! FUNCTION cdf(x, mu, sigma, nu, tau)
+! FUNCTION cdf_elemental(x, mu, sigma, nu, tau)
 !
 ! Compute the SHASH cumulative distribution function (cdf).
 !
@@ -230,7 +241,7 @@ END FUNCTION pdf_x_array
 !   may also be called with array arguments as long as all of the arrays are
 !   commensurate.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION cdf(x, mu, sigma, nu, tau)
+ELEMENTAL FUNCTION cdf_elemental(x, mu, sigma, nu, tau) RESULT(CDF)
     REAL(8) :: cdf
     REAL(8), INTENT(IN) :: x, mu, sigma, nu, tau
 
@@ -243,7 +254,57 @@ ELEMENTAL FUNCTION cdf(x, mu, sigma, nu, tau)
     y = (x - xi) / eta
     z = SINH(delta * ASINH(y) - eps)
     cdf = 0.5 * (1.0 + ERF(ONE_OVER_SQRT_TWO * z))
-END FUNCTION cdf
+END FUNCTION cdf_elemental
+
+
+!------------------------------------------------------------------------------
+! FUNCTION cdf_x_array(x, mu, sigma, nu, tau)
+!
+! Compute the SHASH cumulative distribution function (cdf).
+!
+! Parameters
+! ----------
+! x : real array
+!   The values at which to compute the SHASH cumulative distribution function.
+!
+! mu : real scalar
+!   The location parameter.
+!   TensorFlow calls this "loc".
+!
+! sigma : real scalar
+!   The scale parameter. Must be strictly positive.
+!   TensorFlow calls this "scale".
+!
+! nu : real scalar
+!   The skewness parameter.
+!   TensorFlow calls this "skewness".
+!
+! tau : real scalar
+!   The tail-weight parameter. Must be strictly positive.
+!   TensorFlow calls this "tailweight".
+!
+! Returns
+! -------
+! cdf : real array
+!   The computed shash(mu, sigma, nu, tau) cumulative distribution function
+!   evaluated at x. cdf is the same size as x.
+!
+!------------------------------------------------------------------------------
+PURE FUNCTION cdf_x_array(x, mu, sigma, nu, tau) RESULT(cdf)
+    REAL(8), INTENT(IN) :: x(:)
+    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
+    REAL(8), DIMENSION( SIZE(x) ) :: cdf
+
+    REAL(8) :: xi, eta, eps, delta
+    REAL(8), DIMENSION( SIZE(x) ) :: y, z
+
+    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+
+    ! Apply Jones and Pewsey (2009) bottom of page 762.
+    y = (x - xi) / eta
+    z = SINH(delta * ASINH(y) - eps)
+    cdf = 0.5 * (1.0 + ERF(ONE_OVER_SQRT_TWO * z))
+END FUNCTION cdf_x_array
 
 
 !------------------------------------------------------------------------------

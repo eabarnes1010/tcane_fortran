@@ -1,5 +1,5 @@
 !==============================================================================
-! test_shash.f95                                                     (06.05.22)
+! test_shash.f95                                                     (06.06.22)
 !
 ! Test the FORTRAN-based sinh-arcsinh normal distribution utility functions.
 !
@@ -35,15 +35,40 @@
 !==============================================================================
 
 PROGRAM main
+    CALL test_pdf_scalar()
     CALL test_pdf_elemental()
     CALL test_pdf_x_array()
 
-    CALL test_cdf()
+    CALL test_cdf_scalar()
+    CALL test_cdf_elemental()
+    CALL test_cdf_x_array()
+
     CALL test_quantile()
     CALL test_quantile_random()
+
     CALL test_median()
     CALL test_median_random()
 END PROGRAM main
+
+
+!------------------------------------------------------------------------------
+SUBROUTINE test_pdf_scalar()
+    USE shash_module
+    IMPLICIT NONE
+
+    REAL(8) :: x, mu, sigma, nu, tau
+    REAL(8) :: computed, truth
+
+    x     = 4.5
+    mu    = 1.5
+    sigma = 2.0
+    nu    = 1.5
+    tau   = 1.5
+
+    computed = pdf(x, mu, sigma, nu, tau)
+    truth    = 0.08460783
+    WRITE(*,*) 'test_pdf_scalar:           max_abs_error = ', ABS(computed-truth)
+END SUBROUTINE test_pdf_scalar
 
 
 !------------------------------------------------------------------------------
@@ -87,7 +112,27 @@ END SUBROUTINE test_pdf_x_array
 
 
 !------------------------------------------------------------------------------
-SUBROUTINE test_cdf()
+SUBROUTINE test_cdf_scalar()
+    USE shash_module
+    IMPLICIT NONE
+
+    REAL(8) :: x, mu, sigma, nu, tau
+    REAL(8) :: computed, truth
+
+    x     = 1.5
+    mu    = 1.0
+    sigma = 1.5
+    nu    = 1.0
+    tau   = 0.8
+
+    computed = cdf(x, mu, sigma, nu, tau)
+    truth    = 0.22218556
+    WRITE(*,*) 'test_cdf_scalar:           max_abs_error = ', ABS(computed-truth)
+END SUBROUTINE test_cdf_scalar
+
+
+!------------------------------------------------------------------------------
+SUBROUTINE test_cdf_elemental()
     USE shash_module
     IMPLICIT NONE
 
@@ -102,8 +147,28 @@ SUBROUTINE test_cdf()
 
     computed = cdf(x, mu, sigma, nu, tau)
     truth    = (/ 0.84134475, 0.4925046, 0.22218556, 0.07596765 /)
-    WRITE(*,*) 'test_cdf:                  max_abs_error = ', MAXVAL(ABS(computed-truth))
-END SUBROUTINE test_cdf
+    WRITE(*,*) 'test_cdf_elemental:        max_abs_error = ', MAXVAL(ABS(computed-truth))
+END SUBROUTINE test_cdf_elemental
+
+
+!------------------------------------------------------------------------------
+SUBROUTINE test_cdf_x_array()
+    USE shash_module
+    IMPLICIT NONE
+
+    REAL(8), DIMENSION(4) :: x, mu, sigma, nu, tau
+    REAL(8), DIMENSION( SIZE(x) ) :: computed, truth
+
+    x     = (/ 1.5, 2.5, 3.5, 4.5 /)
+    mu    = 1.5
+    sigma = 2.0
+    nu    = 1.5
+    tau   = 1.5
+
+    computed = cdf(x, mu, sigma, nu, tau)
+    truth    = (/ 0.01661558, 0.1599833, 0.3035546, 0.4036644 /)
+    WRITE(*,*) 'test_cdf_x_array:          max_abs_error = ', MAXVAL(ABS(computed-truth))
+END SUBROUTINE test_cdf_x_array
 
 
 !------------------------------------------------------------------------------
@@ -137,9 +202,13 @@ SUBROUTINE test_quantile_random()
 
     CALL RANDOM_NUMBER(pr)
     CALL RANDOM_NUMBER(mu)
+    mu = 2.0*(mu - 0.5)
     CALL RANDOM_NUMBER(sigma)
+    sigma = 2.0*sigma
     CALL RANDOM_NUMBER(nu)
+    nu = 2.0*(nu - 0.5)
     CALL RANDOM_NUMBER(tau)
+    tau = 2.0*tau
 
     computed = quantile(pr, mu, sigma, nu, tau)
     computed_cdf = cdf(computed, mu, sigma, nu, tau)
@@ -172,14 +241,17 @@ SUBROUTINE test_median_random()
     IMPLICIT NONE
 
     INTEGER, PARAMETER :: NTESTS = 1000
-    REAL(8), DIMENSION(NTESTS) :: pr, mu, sigma, nu, tau
+    REAL(8), DIMENSION(NTESTS) :: mu, sigma, nu, tau
     REAL(8), DIMENSION(NTESTS) :: computed, computed_cdf
 
-    CALL RANDOM_NUMBER(pr)
     CALL RANDOM_NUMBER(mu)
+    mu = 2.0*(mu - 0.5)
     CALL RANDOM_NUMBER(sigma)
+    sigma = 2.0*sigma
     CALL RANDOM_NUMBER(nu)
+    nu = 2.0*(nu - 0.5)
     CALL RANDOM_NUMBER(tau)
+    tau = 2.0*tau
 
     computed = median(mu, sigma, nu, tau)
     computed_cdf = cdf(computed, mu, sigma, nu, tau)
