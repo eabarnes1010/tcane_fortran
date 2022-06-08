@@ -106,8 +106,8 @@ CONTAINS
 !
 ! Compute the SHASH probability density function (pdf).
 !
-! Parameters
-! ----------
+! Arguments
+! ---------
 ! x : real scalar
 !   The value at which to compute the SHASH probability density function.
 !
@@ -159,8 +159,8 @@ END FUNCTION pdf_elemental
 !
 ! Compute the SHASH probability density function (pdf) for an array x.
 !
-! Parameters
-! ----------
+! Arguments
+! ---------
 ! x : real array
 !   The values at which to compute the SHASH probability density function.
 !
@@ -208,8 +208,8 @@ END FUNCTION pdf_x_array
 !
 ! Compute the SHASH cumulative distribution function (cdf).
 !
-! Parameters
-! ----------
+! Arguments
+! ---------
 ! x : real scalar
 !   The value at which to compute the SHASH cumulative distribution function.
 !
@@ -262,8 +262,8 @@ END FUNCTION cdf_elemental
 !
 ! Compute the SHASH cumulative distribution function (cdf).
 !
-! Parameters
-! ----------
+! Arguments
+! ---------
 ! x : real array
 !   The values at which to compute the SHASH cumulative distribution function.
 !
@@ -288,7 +288,6 @@ END FUNCTION cdf_elemental
 ! cdf : real array
 !   The computed shash(mu, sigma, nu, tau) cumulative distribution function
 !   evaluated at x. cdf is the same size as x.
-!
 !------------------------------------------------------------------------------
 PURE FUNCTION cdf_x_array(x, mu, sigma, nu, tau) RESULT(cdf)
     REAL(8), INTENT(IN) :: x(:)
@@ -313,8 +312,8 @@ END FUNCTION cdf_x_array
 ! Compute the SHASH inverse cumulative distribution function: that is,
 ! find x such that cdf(x) = pr.
 !
-! Parameters
-! ----------
+! Arguments
+! ---------
 ! pr : real scalar in the range 0 < p < 1.
 !   The probability value at which to compute the SHASH inverse cumulative
 !   distribution function.
@@ -388,8 +387,8 @@ END FUNCTION quantile
 !
 ! Compute the distribution median.
 !
-! Parameters
-! ----------
+! Arguments
+! ---------
 ! mu : real scalar
 !   The location parameter.
 !   TensorFlow calls this "loc".
@@ -438,8 +437,8 @@ END FUNCTION median
 ! Convert from TensorFlow formulation and notation to the Jones and Pewsey
 ! formulation and notation.
 !
-! Parameters
-! ----------
+! Arguments
+! ---------
 ! mu : real scalar
 !   The location parameter.
 !   TensorFlow calls this "loc".
@@ -477,12 +476,57 @@ END SUBROUTINE
 
 
 !------------------------------------------------------------------------------
+! FUNCTION gaussian_cdf_inv(pr))
+!
+! Compute the approximate inverse cdf for a standard normal distribution.
+!
+! Arguments
+! ---------
+! pr : real scalar in the range 0 < pr < 1.
+!   The value at which to compute Equation (26.2.23).
+!
+! Returns
+! -------
+! gaussian_cdf_inv : real scalar.
+!   returns x where gaussian_cdf(x) = pr.
+!
+! Notes
+! -----
+! * This is merely a helper function.
+!
+! * This implements Abramowitz and Stegun (1965) Equation (26.2.23).
+!
+! * This is an approximation. The error is bounded by |error| < 4.5e-4.
+!
+! * If pr is out of the range 0 < pr < 1, this routine fails.
+!
+! * This FORTRAN code was inspired by John D. Cook's writeup found at:
+! https://www.johndcook.com/blog/normal_cdf_inverse/.
+!------------------------------------------------------------------------------
+ELEMENTAL FUNCTION gaussian_cdf_inv(pr) RESULT(cdf_inv)
+    REAL(8) :: cdf_inv
+    REAL(8), INTENT(IN) :: pr
+
+    IF (pr <= 0.0) THEN
+        cdf_inv = -HUGE(1.0_8)
+    ELSE IF (pr < 0.5) THEN
+        cdf_inv = -rational_approximation( SQRT(-2.0*LOG(pr)) )
+    ELSE IF (pr < 1.0) THEN
+        cdf_inv = rational_approximation( SQRT(-2.0*LOG(1.0 - pr)) )
+    ELSE
+        cdf_inv = HUGE(1.0_8)
+    END IF
+END FUNCTION gaussian_cdf_inv
+
+
+!------------------------------------------------------------------------------
 ! FUNCTION rational_approximation(t)
 !
-! Compute Abramowitz and Stegun (1965) Equation (26.2.23).
+! Compute an approximate inverse cdf for a standard normal distribution using
+! the approximation given by Abramowitz and Stegun (1965) Equation (26.2.23).
 !
-! Parameters
-! ----------
+! Arguments
+! ---------
 ! t : real scalar
 !   The value at which to compute Equation (26.2.23).
 !
@@ -511,48 +555,165 @@ END FUNCTION rational_approximation
 
 
 !------------------------------------------------------------------------------
-! FUNCTION gaussian_cdf_inv(pr))
+! FUNCTION jones_pewsey_pq(q)
 !
-! Compute the approximate inverse cdf for a standard normal distribution.
+! Compute the Jones and Pewsey factor Pq as defined on page 764 of Jones and
+! Pewsey (2009).
 !
-! Parameters
-! ----------
-! pr : real scalar in the range 0 < pr < 1.
-!   The value at which to compute Equation (26.2.23).
+! Arguments
+! ---------
+! q : real scalar.
 !
 ! Returns
 ! -------
-! gaussian_cdf_inv : real scalar.
-!   returns x where gaussian_cdf(x) = pr.
+! p : Jones and Prewsey Pq factor.
+!
 !
 ! Notes
 ! -----
-! * This is merely a helper function.
+! * The Pq factor is used in the computation of the moments for a
+! sinh-arcsinh normal (SHASH) random variable.
 !
-! * This implements Abramowitz and Stegun (1965) Equation (26.2.23).
+! * The Jones and Pewsey Pq factor is defined on page 764 of [1].
 !
-! * This is an approximation. The error is bounded by |error| < 4.5e-4.
+!   $P_q = \frac{e^{1/4}}{(8 \pi)^{1/2}} \left[ K_{(q+1)/2}(1/4) + K_{(q-1)/2}(1/4) \right]$
 !
-! * If pr is out of the range 0 < pr < 1, this returns an IEEE_QUIET_NAN.
+! where $K_{v}(1/4)$ is the modified Bessel function of the second kind.
 !
-! * This FORTRAN code was inspired by John D. Cook's writeup found at:
-! https://www.johndcook.com/blog/normal_cdf_inverse/.
+! * Unfortunately, the modified Bessel function of the second kind is not
+! available in the standard Fortran library. As such, we much carryout these
+! computations.
+!
+! * We compute v = (q-1)/2, and note that (q+1)/2 = v + 1. To compute Pq we
+! must compute $K_{v}(1/4)$ and $K_{v+1}(1/4)$.
+!
+! * Section I.2 of [2], and Section 6.5 of [3], inspired our algorithm for the
+! computation of the $K_{v}(1/4)$ and $K_{v+1}(1/4)$. However, our problem is
+! much simpler, since the argument is fixed at z = 1/4.
+!
+! We compute vo where v = vo + n, n is an integer and vo is limited
+! to -0.5 < vo < 0.5. We then compute $K_{vo}(1/4)$ and $K_{vo+1}(1/4)$
+! using a 15th-order Chebyshev polynomial approximation.  Finally, we compute
+! the target $K_{v}(1/4)$ and $K_{v+1}(1/4)$ using a standard stable forward
+! recursion.
+!
+! References
+! ----------
+! [1] M. C. Jones and A. Pewsey. "Sinh-arcsinh distributions", Biometrika 96.4
+! October 2009, pp. 761–780. DOI: 10.1093/biomet/asp053.
+!
+! [2] N. Temme. "On the numerical evaluation of the modified Bessel function
+! of the third kind", Journal of Computational Physics, 1975, 19, 324-337.
+! DOI: 10.1016/0021-9991(75)90082-0.
+!
+! [3] S. Zhang and J. Jin. Computation of Special Functions. John Wiley and
+! Sons, Inc., 1996. ISBN 978-0471119630.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION gaussian_cdf_inv(pr)
-    REAL(8) :: gaussian_cdf_inv
-    REAL(8), INTENT(IN) :: pr
+ELEMENTAL FUNCTION jones_pewsey_pq(q) RESULT(p)
+    REAL(8) :: p
+    REAL(8), INTENT(IN) :: q
 
-    IF (pr <= 0.0) THEN
-        gaussian_cdf_inv = -HUGE(1.0_8)
-    ELSE IF (pr < 0.5) THEN
-        gaussian_cdf_inv = -rational_approximation( SQRT(-2.0*LOG(pr)) )
-    ELSE IF (pr < 1.0) THEN
-        gaussian_cdf_inv = rational_approximation( SQRT(-2.0*LOG(1.0 - pr)) )
-    ELSE
-        gaussian_cdf_inv = HUGE(1.0_8)
-    END IF
-END FUNCTION gaussian_cdf_inv
+    REAL(8) :: v, vo
+    INTEGER :: n, j
 
+    INTEGER, PARAMETER :: MAX_ORDER = 20
+    REAL(8), DIMENSION(MAX_ORDER) :: K
+
+    ! Partition v so that v = vo + n, where n is an integer
+    ! and -0.5 < vo < 0.5.
+    v = (q-1)/2
+    vo = v
+    n = 0
+    DO WHILE (vo > 0.5)
+        vo = vo - 1.0
+        n = n + 1
+    END DO
+
+    ! Initialize the forward recursion on v using the 12th-order
+    ! polynomial approximation.
+    K(1) = limited_besselk(vo);
+    K(2) = limited_besselk(vo + 1.0);
+
+    ! Compute K_{v}(1/4) and K_{v+1}(1/4) using the standard forward
+    ! recursion formula for the order. See Equation (1.9) of [2] or
+    ! Equation (6.1.23) of [3].
+    v = vo + 1.0
+    DO j = 3, n+2
+        K(j) = 8.0*v*K(j-1) + K(j-2)
+        v = v + 1.0
+    END DO
+
+    ! Compute the Jones and Pewsey factor Pq. See page 764 of Jones
+    ! and Pewsey (2009). The strange constant in front, 0.25612..., is
+    ! $\frac{e^{1/4}}{(8\pi)^{1/2}}$ computed using a high-precision
+    ! calculator.
+    p = 0.25612601391340369863537463_8 * (K(n+2) + K(n+1))
+END FUNCTION jones_pewsey_pq
+
+
+!------------------------------------------------------------------------------
+! FUNCTION limited_besselk(v)
+!
+! Compute $K_{v}(1/4)$ for -0.5 < v < 1.5 using a 15th-order Chebyshev
+! polynomial approximation.
+!
+! Arguments
+! ---------
+! v :: real scalar in the range -0.5 < v < 1.5.
+!   The range-limited order at which to evaluate $K_{v}(1/4)$.
+!
+! Returns
+! -------
+! f : real scalar
+!   The approximate value of $K_{v}(1/4)$.
+!
+! Notes
+! -----
+! * This function uses 15th-order Chebyshev polynomial minimax fit for
+! $K_{v}(1/4)$ over the range -0.5 < v < 1.5.
+!
+! * The polynomial coefficients were precomputed to minimize the maximum
+! absolute error over the range -0.5 < v < 1.5. The resulting maximum
+! absolute error error is 6.68e-11.
+!------------------------------------------------------------------------------
+ELEMENTAL FUNCTION limited_besselk(v) RESULT(f)
+    REAL(8) :: f
+    REAL(8), INTENT(IN) :: v
+
+    REAL(8) :: x, D1, D2, S
+    INTEGER :: j
+
+    ! Precomputed coefficients for a 15th-order Chebyshev polynomial minimax
+    ! fit of $K_{v}(1/4)$ over the range -0.5 < v < 1.5.
+    REAL(8), PARAMETER :: C(16) = (/&
+        3.703498483049486e+00_8, &
+        3.291364878445456e+00_8, &
+        1.940643036786937e+00_8, &
+        5.662030547496981e-01_8, &
+        2.003994693199613e-01_8, &
+        4.459824835968565e-02_8, &
+        1.150959269394563e-02_8, &
+        2.093789904913530e-03_8, &
+        4.299445769978876e-04_8, &
+        6.657921299844640e-05_8, &
+        1.143004469426901e-05_8, &
+        1.547568909556892e-06_8, &
+        2.293008750401813e-07_8, &
+        2.765961264284608e-08_8, &
+        3.614997877748472e-09_8, &
+        4.019025718452231e-10_8 /)
+
+    ! Rescale the interval from -0.5 : 1.5 to -1 : 1.
+    x = v - 0.5
+
+    ! Evaluate the 15th-order Chebyshev polynomial using Clenshaw recurrence.
+    DO j = 16, 2, -1
+        S = D1;
+        D1 = 2*x*D1 - D2 + c(j);
+        D2 = S;
+    END DO
+    f = x*D1 - D2 + c(1);
+END FUNCTION limited_besselk
 
 !==============================================================================
 END MODULE shash_module
