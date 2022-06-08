@@ -1,5 +1,5 @@
 !==============================================================================
-! test_shash.f95                                                     (06.06.22)
+! test_shash.f95                                                     (06.08.22)
 !
 ! Test the FORTRAN-based sinh-arcsinh normal distribution utility functions.
 !
@@ -48,6 +48,11 @@ PROGRAM main
 
     CALL test_median()
     CALL test_median_random()
+
+    CALL test_mean()
+    CALL test_variance()
+    CALL test_stddev()
+    CALL test_skew()
 END PROGRAM main
 
 
@@ -257,3 +262,79 @@ SUBROUTINE test_median_random()
     computed_cdf = cdf(computed, mu, sigma, nu, tau)
     WRITE(*,*) 'test_median_random (p):    max_abs_error = ', MAXVAL(ABS(computed_cdf-0.5))
 END SUBROUTINE test_median_random
+
+
+!------------------------------------------------------------------------------
+SUBROUTINE test_mean()
+    USE shash_module
+    IMPLICIT NONE
+
+    REAL(8), DIMENSION(4) :: mu, sigma, nu, tau
+    REAL(8), DIMENSION( SIZE(mu) ) :: computed, truth
+
+    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
+    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
+    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
+    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+
+    computed = mean(mu, sigma, nu, tau)
+    truth    = (/ 0.0, 1.2058396, 3.2700596, 9.874768 /)
+    WRITE(*,*) 'test_mean:                 max_abs_error = ', MAXVAL(ABS(computed-truth))
+END SUBROUTINE test_mean
+
+
+!------------------------------------------------------------------------------
+SUBROUTINE test_variance()
+    USE shash_module
+    IMPLICIT NONE
+
+    REAL(8), DIMENSION(4) :: mu, sigma, nu, tau
+    REAL(8), DIMENSION( SIZE(mu) ) :: computed, truth
+
+    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
+    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
+    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
+    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+
+    computed = variance(mu, sigma, nu, tau)
+    truth    = (/ 0.25, 1.3164116, 4.4789896, 105.18572 /)
+    WRITE(*,*) 'test_variance:             max_rel_error = ', MAXVAL(ABS((computed-truth)/truth))
+END SUBROUTINE test_variance
+
+
+!------------------------------------------------------------------------------
+SUBROUTINE test_stddev()
+    USE shash_module
+    IMPLICIT NONE
+
+    REAL(8), DIMENSION(4) :: mu, sigma, nu, tau
+    REAL(8), DIMENSION( SIZE(mu) ) :: computed, truth
+
+    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
+    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
+    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
+    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+
+    computed = stddev(mu, sigma, nu, tau)
+    truth    = (/ 0.5, 1.1473497, 2.1163623, 10.256009 /)
+    WRITE(*,*) 'test_stddev:               max_rel_error = ', MAXVAL(ABS((computed-truth)/truth))
+END SUBROUTINE test_stddev
+
+
+!------------------------------------------------------------------------------
+SUBROUTINE test_skew()
+    USE shash_module
+    IMPLICIT NONE
+
+    REAL(8), DIMENSION(4) :: mu, sigma, nu, tau
+    REAL(8), DIMENSION( SIZE(mu) ) :: computed, truth
+
+    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
+    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
+    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
+    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+
+    computed = skew(mu, sigma, nu, tau)
+    truth    = (/ 0.0, 0.7544219, 0.7953873, 2.29442 /)
+    WRITE(*,*) 'test_skew:                 max_rel_error = ', MAXVAL(ABS((computed-truth)/truth))
+END SUBROUTINE test_skew
