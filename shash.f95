@@ -1,5 +1,5 @@
 !==============================================================================
-! shash.f95                                                          (06.08.22)
+! shash.f95                                                          (06.10.22)
 !
 ! FORTRAN-based sinh-arcsinh normal (SHASH) distribution utility functions.
 !
@@ -107,8 +107,6 @@ PUBLIC mean
 PUBLIC variance
 PUBLIC stddev
 PUBLIC skew
-
-PUBLIC jones_pewsey_p
 
 !---------------------------------------------------------------------------
 ! Mathematical constants
@@ -843,6 +841,8 @@ END FUNCTION rational_approximation
 !
 !       K_{v+1}(1/4) = 8v * K_{v}(1/4) + K_{v-1}(1/4)
 !
+! * The maximum relative error over the practical range of q's is 1e-11.
+!
 ! References
 ! ----------
 ! [1] M. C. Jones and A. Pewsey. "Sinh-arcsinh distributions", Biometrika 96.4
@@ -859,11 +859,8 @@ ELEMENTAL FUNCTION jones_pewsey_p(q) RESULT(p)
     REAL(8) :: p
     REAL(8), INTENT(IN) :: q
 
-    REAL(8) :: v, vo
+    REAL(8) :: v, vo, K1, K2, S
     INTEGER :: n, j
-
-    INTEGER, PARAMETER :: MAX_ORDER = 40
-    REAL(8), DIMENSION(MAX_ORDER) :: K
 
     ! Partition v so that v = vo + n, where n is an integer
     ! and -0.5 < vo < 0.5.
@@ -877,15 +874,17 @@ ELEMENTAL FUNCTION jones_pewsey_p(q) RESULT(p)
 
     ! Initialize the forward recursion on v using the 12th-order
     ! polynomial approximation.
-    K(1) = limited_besselk(vo);
-    K(2) = limited_besselk(vo + 1.0);
+    K2 = limited_besselk(vo)
+    K1 = limited_besselk(vo + 1.0)
 
     ! Compute K_{v}(1/4) and K_{v+1}(1/4) using the standard forward
     ! recursion formula for the order. See Equation (1.9) of [2] or
     ! Equation (6.1.23) of [3].
     v = vo + 1.0
     DO j = 3, n+2
-        K(j) = 8.0*v*K(j-1) + K(j-2)
+        S = K1
+        K1 = 8.0*v*K1 + K2
+        K2 = S
         v = v + 1.0
     END DO
 
@@ -893,7 +892,7 @@ ELEMENTAL FUNCTION jones_pewsey_p(q) RESULT(p)
     ! and Pewsey (2009). The strange constant in front, 0.25612..., is
     ! $\frac{e^{1/4}}{(8\pi)^{1/2}}$ computed using a high-precision
     ! calculator.
-    p = 0.25612601391340369863537463_8 * (K(n+2) + K(n+1))
+    p = 0.25612601391340369863537463_8 * (K1 + K2)
 END FUNCTION jones_pewsey_p
 
 
