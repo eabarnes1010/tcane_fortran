@@ -53,6 +53,8 @@ PROGRAM main
     CALL test_variance()
     CALL test_stddev()
     CALL test_skew()
+
+    CALL test_jones_pewsey_p()
 END PROGRAM main
 
 
@@ -338,3 +340,21 @@ SUBROUTINE test_skew()
     truth    = (/ 0.0, 0.7544219, 0.7953873, 2.29442 /)
     WRITE(*,*) 'test_skew:                 max_rel_error = ', MAXVAL(ABS((computed-truth)/truth))
 END SUBROUTINE test_skew
+
+
+!------------------------------------------------------------------------------
+SUBROUTINE test_jones_pewsey_p()
+    USE shash_module
+    IMPLICIT NONE
+
+    REAL(8), DIMENSION(7) :: q
+    REAL(8), DIMENSION( SIZE(q) ) :: computed, truth
+
+    q = (/ 0.1_8, 0.3_8, 0.6_8, 0.8_8, 2.0_8, 3.0_8, 10.0_8 /)
+    computed = jones_pewsey_p(q)
+    truth    = (/ &
+        1.00316936687326_8, 1.02878291986456_8, 1.11869793664452_8, &
+        1.21781578142835_8, 3.00000000000000_8, 9.03221742138921_8, &
+        636291.0_8 /)
+    WRITE(*,*) 'test_jones_pewsey_p:       max_rel_error = ', MAXVAL(ABS((computed-truth)/truth))
+END SUBROUTINE test_jones_pewsey_p

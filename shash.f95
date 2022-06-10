@@ -46,7 +46,7 @@
 ! Notes
 ! -----
 ! * The sinh-arcsinh normal distribution was defined in [1]. A more accessible,
-! though less comprehensive, presentation is given in [2].
+!   though less comprehensive, presentation is given in [2].
 !
 ! * This code was tested using:
 !   GNU Fortran (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 8.1.0
@@ -61,10 +61,6 @@
 ! Significance, Wiley, 2019, 16, 6-7.
 ! DOI: 10.1111/j.1740-9713.2019.01245.x.
 ! https://rss.onlinelibrary.wiley.com/doi/10.1111/j.1740-9713.2019.01245.x
-!
-! [3] Abramowitz, M. & Stegun, I. A., Handbook of Mathematical Functions:
-! with Formulas, Graphs, and Mathematical Tables, Dover Publications, 1965.
-! ISBN: 978-0486612720.
 !
 ! Authors
 ! -------
@@ -111,6 +107,8 @@ PUBLIC mean
 PUBLIC variance
 PUBLIC stddev
 PUBLIC skew
+
+PUBLIC jones_pewsey_p
 
 !---------------------------------------------------------------------------
 ! Mathematical constants
@@ -692,11 +690,11 @@ END FUNCTION skew
 ! Notes
 ! -----
 ! * This conversion of the parameters is necessary to use the detailed
-! formulas given in Jones and Pewsey [1] directly as published.
+!   formulas given in Jones and Pewsey [1] directly as published.
 !
 ! * We could have converted the formulas to the tfp notation, but such a
-! reformulation does not save significant computational time while severly
-! sacrificing clarity.
+!   reformulation does not save significant computational time while severly
+!   sacrificing clarity.
 !------------------------------------------------------------------------------
 ELEMENTAL SUBROUTINE convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
     REAL(8), INTENT(IN) :: mu, sigma, nu, tau
@@ -735,7 +733,7 @@ END SUBROUTINE
 ! * If pr is out of the range 0 < pr < 1, this routine fails.
 !
 ! * This FORTRAN code was inspired by John D. Cook's writeup found at:
-! https://www.johndcook.com/blog/normal_cdf_inverse/.
+!   https://www.johndcook.com/blog/normal_cdf_inverse/.
 !------------------------------------------------------------------------------
 ELEMENTAL FUNCTION gaussian_cdf_inv(pr) RESULT(cdf_inv)
     REAL(8) :: cdf_inv
@@ -775,7 +773,13 @@ END FUNCTION gaussian_cdf_inv
 ! * The rational approximation is computed using Horner's rule.
 !
 ! * This FORTRAN code was inspired by John D. Cook's writeup found at:
-! https://www.johndcook.com/blog/normal_cdf_inverse/.
+!   https://www.johndcook.com/blog/normal_cdf_inverse/.
+!
+! References
+! ----------
+! Abramowitz, M. & Stegun, I. A., Handbook of Mathematical Functions:
+! with Formulas, Graphs, and Mathematical Tables, Dover Publications, 1965.
+! ISBN: 978-0486612720.
 !------------------------------------------------------------------------------
 ELEMENTAL FUNCTION rational_approximation(t)
     REAL(8) :: rational_approximation
@@ -800,37 +804,44 @@ END FUNCTION rational_approximation
 !
 ! Returns
 ! -------
-! p : Jones and Prewsey Pq factor.
-!
+! p : Jones and Pewsey Pq factor.
 !
 ! Notes
 ! -----
 ! * The Pq factor is used in the computation of the moments for a
-! sinh-arcsinh normal (SHASH) random variable.
+!   sinh-arcsinh normal (SHASH) random variable.
 !
 ! * The Jones and Pewsey Pq factor is defined on page 764 of [1].
 !
 !   $P_q = \frac{e^{1/4}}{(8 \pi)^{1/2}} \cdot
 !          \left[ K_{(q+1)/2}(1/4) + K_{(q-1)/2}(1/4) \right]$
 !
-! where $K_{v}(1/4)$ is the modified Bessel function of the second kind.
+!   where $K_{v}(1/4)$ is the modified Bessel function of the second kind.
 !
 ! * Unfortunately, the modified Bessel function of the second kind is not
-! available in the standard Fortran library. As such, we much carryout these
-! computations.
+!   available in the standard Fortran library. As such, we much carryout
+!   these computations.
 !
 ! * We compute v = (q-1)/2, and note that (q+1)/2 = v + 1. To compute Pq we
-! must compute $K_{v}(1/4)$ and $K_{v+1}(1/4)$.
+!   must compute $K_{v}(1/4)$ and $K_{v+1}(1/4)$.
 !
-! * Section I.2 of [2], and Section 6.5 of [3], inspired our algorithm for the
-! computation of the $K_{v}(1/4)$ and $K_{v+1}(1/4)$. However, our problem is
-! much simpler, since the argument is fixed at z = 1/4.
+! * Section I.2 of [2], and Section 6.5 of [3], inspired our algorithm for
+!   the computation of the $K_{v}(1/4)$ and $K_{v+1}(1/4)$. However, our
+!	problem is much simpler, since the argument is fixed at z = 1/4.
 !
-! We compute vo where v = vo + n, n is an integer and vo is limited
-! to -0.5 < vo < 0.5. We then compute $K_{vo}(1/4)$ and $K_{vo+1}(1/4)$
-! using a 15th-order Chebyshev polynomial approximation.  Finally, we compute
-! the target $K_{v}(1/4)$ and $K_{v+1}(1/4)$ using a standard stable forward
-! recursion.
+! * We compute vo where v = vo + n, n is an integer and vo is limited
+!   to -0.5 < vo < 0.5. We then compute $K_{vo}(1/4)$ and $K_{vo+1}(1/4)$
+!   using a 15th-order Chebyshev polynomial approximation.
+!
+! * Finally, we compute the target $K_{v}(1/4)$ and $K_{v+1}(1/4)$ using
+!   a standard stable forward recursion. See Equation (1.9) on page 325
+!   of [2].
+!
+!       K_{v+1}(z) - (2v/z) K_{v}(z) - K_{v-1}(z) = 0
+!
+!   For our specific case, z = 1/4, so this formula simplifies to
+!
+!       K_{v+1}(1/4) = 8v * K_{v}(1/4) + K_{v-1}(1/4)
 !
 ! References
 ! ----------
@@ -905,12 +916,12 @@ END FUNCTION jones_pewsey_p
 ! Notes
 ! -----
 ! * This function uses 15th-order Chebyshev polynomial minimax fit for
-! $K_{v}(1/4)$ over the range 0 < v < 1.5.  Since $K_v(1/4)$ is an even
-! function, this minimax fit is optimal over the range -1.5 < v < 1.5.
+!   $K_{v}(1/4)$ over the range 0 < v < 1.5.  Since $K_v(1/4)$ is an even
+!   function, this minimax fit is optimal over the range -1.5 < v < 1.5.
 !
 ! * The polynomial coefficients were precomputed to minimize the maximum
-! absolute error over the range 0 < v < 1.5. The resulting maximum
-! absolute error over this range is 2.59e-12.
+!   absolute error over the range 0 < v < 1.5. The resulting maximum
+!   absolute error over this range is 2.59e-12.
 !------------------------------------------------------------------------------
 ELEMENTAL FUNCTION limited_besselk(v) RESULT(f)
     REAL(8) :: f
