@@ -1,5 +1,5 @@
 !==============================================================================
-! shash.f95                                                          (06.10.22)
+! shash.f95                                                          (10.10.22)
 !
 ! FORTRAN-based sinh-arcsinh normal (SHASH) distribution utility functions.
 !
@@ -54,7 +54,7 @@
 !   though less comprehensive, presentation is given in [2].
 !
 ! * This code was tested using:
-!   GNU Fortran (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 8.1.0
+!   GNU Fortran (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders) 12.2.0
 !
 ! References
 ! ----------
@@ -116,8 +116,10 @@ PUBLIC skew
 !---------------------------------------------------------------------------
 ! Mathematical constants
 !---------------------------------------------------------------------------
-REAL(8), PARAMETER :: ONE_OVER_SQRT_TWO    = 0.7071067811865475244008444
-REAL(8), PARAMETER :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461
+REAL(8), PARAMETER :: PI                   = 3.1415926535897932384626434_8
+REAL(8), PARAMETER :: PI_OVER_TWO          = 1.5707963267948966192313217_8
+REAL(8), PARAMETER :: ONE_OVER_SQRT_TWO    = 0.7071067811865475244008444_8
+REAL(8), PARAMETER :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461_8
 
 CONTAINS
 
@@ -803,11 +805,12 @@ END FUNCTION rational_approximation
 !
 ! Arguments
 ! ---------
-! q : real scalar.
+! q : real scalar, q > 0
 !
 ! Returns
 ! -------
-! p : Jones and Pewsey Pq factor.
+! p : real scalar
+!   Jones and Pewsey Pq factor.
 !
 ! Notes
 ! -----
@@ -821,32 +824,8 @@ END FUNCTION rational_approximation
 !
 !   where $K_{v}(1/4)$ is the modified Bessel function of the second kind.
 !
-! * Unfortunately, the modified Bessel function of the second kind is not
-!   available in the standard Fortran library. As such, we much carryout
-!   these computations.
-!
-! * We compute v = (q-1)/2, and note that (q+1)/2 = v + 1. To compute Pq we
-!   must compute $K_{v}(1/4)$ and $K_{v+1}(1/4)$.
-!
-! * Section I.2 of [2], and Section 6.5 of [3], inspired our algorithm for
-!   the computation of the $K_{v}(1/4)$ and $K_{v+1}(1/4)$. However, our
-!	problem is much simpler, since the argument is fixed at z = 1/4.
-!
-! * We compute vo where v = vo + n, n is an integer and vo is limited
-!   to -0.5 < vo < 0.5. We then compute $K_{vo}(1/4)$ and $K_{vo+1}(1/4)$
-!   using a 15th-order Chebyshev polynomial approximation.
-!
-! * Finally, we compute the target $K_{v}(1/4)$ and $K_{v+1}(1/4)$ using
-!   a standard stable forward recursion. See Equation (1.9) on page 325
-!   of [2].
-!
-!       K_{v+1}(z) - (2v/z) K_{v}(z) - K_{v-1}(z) = 0
-!
-!   For our specific case, z = 1/4, so this formula simplifies to
-!
-!       K_{v+1}(1/4) = 8v * K_{v}(1/4) + K_{v-1}(1/4)
-!
-! * The maximum relative error over the practical range of q's is 1e-11.
+! * The strange constant 0.25612..., is $\frac{e^{1/4}}{(8\pi)^{1/2}}$
+!   computed using a high-precision calculator.
 !
 ! References
 ! ----------
@@ -860,115 +839,86 @@ END FUNCTION rational_approximation
 ! [3] S. Zhang and J. Jin. Computation of Special Functions. John Wiley and
 ! Sons, Inc., 1996. ISBN 978-0471119630.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION jones_pewsey_p(q) RESULT(p)
-    REAL(8) :: p
+ELEMENTAL FUNCTION jones_pewsey_p(q) RESULT(f)
+    REAL(8) :: f
     REAL(8), INTENT(IN) :: q
 
-    REAL(8) :: v, vo, K1, K2, S
-    INTEGER :: n, j
-
-    ! Partition v so that v = vo + n, where n is an integer
-    ! and -0.5 < vo < 0.5.
-    v = (q-1.0)/2.0
-    vo = v
-    n = 0
-    DO WHILE (vo > 0.5)
-        vo = vo - 1.0
-        n = n + 1
-    END DO
-
-    ! Initialize the forward recursion on v using the 12th-order
-    ! polynomial approximation.
-    K2 = limited_besselk(vo)
-    K1 = limited_besselk(vo + 1.0)
-
-    ! Compute K_{v}(1/4) and K_{v+1}(1/4) using the standard forward
-    ! recursion formula for the order. See Equation (1.9) of [2] or
-    ! Equation (6.1.23) of [3].
-    v = vo + 1.0
-    DO j = 3, n+2
-        S = K1
-        K1 = 8.0*v*K1 + K2
-        K2 = S
-        v = v + 1.0
-    END DO
-
-    ! Compute the Jones and Pewsey factor Pq. See page 764 of Jones
-    ! and Pewsey (2009). The strange constant in front, 0.25612..., is
-    ! $\frac{e^{1/4}}{(8\pi)^{1/2}}$ computed using a high-precision
-    ! calculator.
-    p = 0.25612601391340369863537463_8 * (K1 + K2)
+    f = 0.2561260139134036986353746_8 * (Kv((q+1.0)/2.0) + Kv((q-1.0)/2.0))
 END FUNCTION jones_pewsey_p
 
 
 !------------------------------------------------------------------------------
-! FUNCTION limited_besselk(v)
+! FUNCTION Kv(v)
 !
-! Compute $K_{v}(1/4)$ for -0.5 < v < 1.5 using a 15th-order Chebyshev
-! polynomial approximation.
+! Compute the modified Bessel function of the second kind at (1/4):
+! $K_{v}(1/4)$.
 !
 ! Arguments
 ! ---------
-! v :: real scalar in the range -0.5 < v < 1.5.
-!   The range-limited order at which to evaluate $K_{v}(1/4)$.
+! v :: real scalar, v > -1
 !
 ! Returns
 ! -------
 ! f : real scalar
-!   The approximate value of $K_{v}(1/4)$.
+!   The value of $K_{v}(1/4)$.
 !
 ! Notes
 ! -----
-! * This function uses 15th-order Chebyshev polynomial minimax fit for
-!   $K_{v}(1/4)$ over the range 0 < v < 1.5.  Since $K_v(1/4)$ is an even
-!   function, this minimax fit is optimal over the range -1.5 < v < 1.5.
-!
-! * The polynomial coefficients were precomputed to minimize the maximum
-!   absolute error over the range 0 < v < 1.5. The resulting maximum
-!   absolute error over this range is 2.59e-12.
+! * The standard relationship between Kv(z) and Iv(z) has singularities at
+!   v = 0 and v = 1, due to the sin(v*PI) term in the denominator. To eliminate
+!   these singularities we use a quadratic approximation around v = 0, and a
+!   linear approximation around v = 1.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION limited_besselk(v) RESULT(f)
+ELEMENTAL FUNCTION Kv(v) RESULT(f)
     REAL(8) :: f
     REAL(8), INTENT(IN) :: v
 
-    REAL(8) :: x, D1, D2, S
-    INTEGER :: j
+    IF (ABS(v) < 1.0e-4) THEN
+        f = 1.541506751248303 + 1.491844425771660 * v**2
+    ELSEIF (ABS(v-1.0) < 1.0e-4) THEN
+        f = 3.747025974440712 + 6.166027005560792 * (v-1.0)
+    ELSE
+        f = PI_OVER_TWO * (Iv(-v) - Iv(v)) / SIN(v*PI)
+    END IF
+END FUNCTION Kv
 
-    ! Precomputed coefficients for a 15th-order Chebyshev polynomial minimax
-    ! fit of $K_{v}(1/4)$ over the range 0 < v < 1.5.
-    REAL(8), PARAMETER :: C(16) = (/&
-        4.016173000662477e+00_8, &
-        3.680256698001561e+00_8, &
-        1.529386459010599e+00_8, &
-        4.091109133307468e-01_8, &
-        1.019136775192196e-01_8, &
-        1.972471448970591e-02_8, &
-        3.607966711284610e-03_8, &
-        5.539144292471172e-04_8, &
-        8.113429568106013e-05_8, &
-        1.039901684958997e-05_8, &
-        1.280065774244613e-06_8, &
-        1.415025072503714e-07_8, &
-        1.509637434604769e-08_8, &
-        1.471432035965069e-09_8, &
-        1.394220950897152e-10_8, &
-        1.242904280737545e-11_8 /)
 
-    ! Rescale the interval from [0 : 1.5] to [-1 : 1], and take advantage of
-    ! the fact that $K_v(1/4)$ is an even function.
-    x = (4.0*ABS(v) - 3.0)/3.0;
+!------------------------------------------------------------------------------
+! FUNCTION Iv(v)
+!
+! Compute the modified Bessel function of the first kind at (1/4):
+! $I_{v}(1/4)$.
+!
+! Arguments
+! ---------
+! v :: real scalar, v > -1
+!
+! Returns
+! -------
+! f : real scalar
+!   The value of $I_{v}(1/4)$.
+!
+! Notes
+! -----
+! * Using only six terms in the infinite series is sufficient to achieve full
+!   double precision for all cases.
+!------------------------------------------------------------------------------
+ELEMENTAL FUNCTION Iv(v) RESULT(f)
+    REAL(8) :: f
+    REAL(8), INTENT(IN) :: v
 
-    ! Evaluate the 15th-order Chebyshev polynomial using Clenshaw recurrence.
-    D1 = 0.0
-    D2 = 0.0
+    REAL(8) :: term
+    INTEGER :: m
 
-    DO j = 16, 2, -1
-        S = D1
-        D1 = 2.0*x*D1 - D2 + c(j)
-        D2 = S
+    term = 1.0 / (8.0**v * GAMMA(v + 1.0))
+    f = term
+
+    DO m = 1, 6
+        term = term / (64.0 * m * (v+m))
+        f = f + term
     END DO
-    f = x*D1 - D2 + c(1)
-END FUNCTION limited_besselk
+END FUNCTION Iv
+
 
 !==============================================================================
 END MODULE shash_module

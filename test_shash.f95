@@ -5,11 +5,10 @@
 !
 ! Notes
 ! -----
-! * In all tests, the "truth" values for the test were computed using
-!   TensorFlow [1].
+! * The pdf and cdf "truth" values were computed using TensorFlow [1].
 !
 ! * This code was tested using:
-!   GNU Fortran (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 8.1.0
+!   GNU Fortran (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders) 12.2.0
 !
 ! References
 ! ----------
