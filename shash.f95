@@ -23,6 +23,11 @@
 !   * pr, mu, sigma, nu, and tau may be scalars.
 !   * pr, mu, sigma, nu, and tau may be commensurate arrays.
 !
+! mean(mu, sigma, nu, tau)
+!   Compute the distribution mean.
+!   * mu, sigma, nu, and tau may be scalars.
+!   * mu, sigma, nu, and tau may be commensurate arrays.
+!
 ! median(mu, sigma, nu, tau)
 !   Compute the distribution median.
 !   * mu, sigma, nu, and tau may be scalars.
