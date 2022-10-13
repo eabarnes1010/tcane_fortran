@@ -53,9 +53,12 @@ SUBROUTINE test_shash()
     CALL test_shash_median_random()
 
     CALL test_shash_mean()
+    CALL test_shash_mode()
     CALL test_shash_variance()
     CALL test_shash_stddev()
     CALL test_shash_skew()
+
+    CALL test_shash_summary_statistics()
 END SUBROUTINE test_shash
 
 
@@ -287,6 +290,25 @@ END SUBROUTINE test_shash_mean
 
 
 !------------------------------------------------------------------------------
+SUBROUTINE test_shash_mode()
+    USE shash_module
+    IMPLICIT NONE
+
+    REAL(8), DIMENSION(4) :: mu, sigma, nu, tau
+    REAL(8), DIMENSION( SIZE(mu) ) :: computed, truth
+
+    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
+    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
+    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
+    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+
+    computed = mode(mu, sigma, nu, tau)
+    truth    = (/ 0.0, 0.5764171, 1.6523985, 2.304149 /)
+    WRITE(*,*) 'test_shash_mode:                 max_abs_error = ', MAXVAL(ABS(computed-truth))
+END SUBROUTINE test_shash_mode
+
+
+!------------------------------------------------------------------------------
 SUBROUTINE test_shash_variance()
     USE shash_module
     IMPLICIT NONE
@@ -301,7 +323,7 @@ SUBROUTINE test_shash_variance()
 
     computed = variance(mu, sigma, nu, tau)
     truth    = (/ 0.25, 1.3164116, 4.4789896, 105.18572 /)
-    WRITE(*,*) 'test_shash_variance:             max_rel_error = ', MAXVAL(ABS((computed-truth)/truth))
+    WRITE(*,*) 'test_shash_variance:             max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_variance
 
 
@@ -320,7 +342,7 @@ SUBROUTINE test_shash_stddev()
 
     computed = stddev(mu, sigma, nu, tau)
     truth    = (/ 0.5, 1.1473497, 2.1163623, 10.256009 /)
-    WRITE(*,*) 'test_shash_stddev:               max_rel_error = ', MAXVAL(ABS((computed-truth)/truth))
+    WRITE(*,*) 'test_shash_stddev:               max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_stddev
 
 
@@ -339,5 +361,29 @@ SUBROUTINE test_shash_skew()
 
     computed = skew(mu, sigma, nu, tau)
     truth    = (/ 0.0, 0.7544219, 0.7953873, 2.29442 /)
-    WRITE(*,*) 'test_shash_skew:                 max_rel_error = ', MAXVAL(ABS((computed-truth)/truth))
+    WRITE(*,*) 'test_shash_skew:                 max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_skew
+
+
+!------------------------------------------------------------------------------
+SUBROUTINE test_shash_summary_statistics()
+    USE shash_module
+    IMPLICIT NONE
+
+    REAL(8) :: mu, sigma, nu, tau
+    TYPE (SUMMARY_STATISTICS) :: computed, truth
+
+    mu    = 1.5
+    sigma = 2.0
+    nu    = 1.5
+    tau   = 1.5
+
+    computed = compute_summary_statistics(mu, sigma, nu, tau)
+    truth = SUMMARY_STATISTICS ( &
+        9.7736439220844833, 9.8747668656411314, 5.8619225974669984, &
+        2.3041489830951853, 2.1470212037212448, 3.0838357058423180, &
+        12.857479627926802, 23.353488414505147, 2.2944202715734878, &
+        10.256009741701654, 105.18573582187922 )
+
+    WRITE(*,*) 'test_shash_summary_statistics'
+END SUBROUTINE test_shash_summary_statistics

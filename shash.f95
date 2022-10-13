@@ -48,6 +48,8 @@
 !   * mu, sigma, nu, and tau may be scalars.
 !   * mu, sigma, nu, and tau may be commensurate arrays.
 !
+! compute_summary_statistics
+
 ! Notes
 ! -----
 ! * The sinh-arcsinh normal distribution was defined in [1]. A more accessible,
@@ -88,6 +90,23 @@ MODULE shash_module
 IMPLICIT NONE
 PRIVATE
 
+!---------------------------------------------------------------------------
+! Defined types
+!---------------------------------------------------------------------------
+TYPE SUMMARY_STATISTICS
+    REAL(8) :: interquartile_range
+    REAL(8) :: mean
+    REAL(8) :: median
+    REAL(8) :: mode
+    REAL(8) :: percentile_10
+    REAL(8) :: percentile_25
+    REAL(8) :: percentile_75
+    REAL(8) :: percentile_90
+    REAL(8) :: skew
+    REAL(8) :: stddev
+    REAL(8) :: variance
+END TYPE
+
 !------------------------------------------------------------------------------
 ! Interface block
 !------------------------------------------------------------------------------
@@ -109,9 +128,13 @@ PUBLIC cdf
 PUBLIC quantile
 PUBLIC median
 PUBLIC mean
+PUBLIC mode
 PUBLIC variance
 PUBLIC stddev
 PUBLIC skew
+
+PUBLIC SUMMARY_STATISTICS
+PUBLIC compute_summary_statistics
 
 !---------------------------------------------------------------------------
 ! Mathematical constants
@@ -120,6 +143,7 @@ REAL(8), PARAMETER :: PI                   = 3.1415926535897932384626434_8
 REAL(8), PARAMETER :: PI_OVER_TWO          = 1.5707963267948966192313217_8
 REAL(8), PARAMETER :: ONE_OVER_SQRT_TWO    = 0.7071067811865475244008444_8
 REAL(8), PARAMETER :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461_8
+
 
 CONTAINS
 
@@ -406,58 +430,9 @@ END FUNCTION quantile
 
 
 !------------------------------------------------------------------------------
-! FUNCTION median(mu, sigma, nu, tau)
-!
-! Compute the distribution median.
-!
-! Arguments
-! ---------
-! mu : real scalar
-!   The location parameter.
-!   TensorFlow calls this "loc".
-!
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
-!
-! nu : real scalar
-!   The skewness parameter.
-!   TensorFlow calls this "skewness".
-!
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
-!
-! Returns
-! -------
-! median : real scalar
-!   The computed median of shash(mu, sigma, nu, tau).
-!
-! Notes
-! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
-!
-! * Unlike the quantile function, this is an exact computation.
-!------------------------------------------------------------------------------
-ELEMENTAL FUNCTION median(mu, sigma, nu, tau)
-    REAL(8) :: median
-    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
-
-    REAL(8) :: xi, eta, eps, delta
-
-    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
-
-    ! Apply Jones and Pewsey (2009) bottom of page 762.
-    median = xi + eta * SINH(eps / delta)
-END FUNCTION median
-
-
-!------------------------------------------------------------------------------
 ! FUNCTION mean(mu, sigma, nu, tau)
 !
-! Compute the distribution mean.
+! Compute the SHASH distribution mean.
 !
 ! Arguments
 ! ---------
@@ -504,9 +479,134 @@ END FUNCTION mean
 
 
 !------------------------------------------------------------------------------
+! FUNCTION median(mu, sigma, nu, tau)
+!
+! Compute the SHASH distribution median.
+!
+! Arguments
+! ---------
+! mu : real scalar
+!   The location parameter.
+!   TensorFlow calls this "loc".
+!
+! sigma : real scalar
+!   The scale parameter. Must be strictly positive.
+!   TensorFlow calls this "scale".
+!
+! nu : real scalar
+!   The skewness parameter.
+!   TensorFlow calls this "skewness".
+!
+! tau : real scalar
+!   The tail-weight parameter. Must be strictly positive.
+!   TensorFlow calls this "tailweight".
+!
+! Returns
+! -------
+! median : real scalar
+!   The computed median of shash(mu, sigma, nu, tau).
+!
+! Notes
+! -----
+! * This function is ELEMENTAL, so it may be called with scalar arguments. It
+!   may also be called with array arguments as long as all of the arrays are
+!   commensurate.
+!
+! * Unlike the quantile function, this is an exact computation.
+!------------------------------------------------------------------------------
+ELEMENTAL FUNCTION median(mu, sigma, nu, tau)
+    REAL(8) :: median
+    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
+
+    REAL(8) :: xi, eta, eps, delta
+
+    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+
+    ! Apply Jones and Pewsey (2009) bottom of page 762.
+    median = xi + eta * SINH(eps / delta)
+END FUNCTION median
+
+
+!------------------------------------------------------------------------------
+! FUNCTION mode(mu, sigma, nu, tau)
+!
+! Compute the SHASH distribution mode.
+!
+! Arguments
+! ---------
+! mu : real scalar
+!   The location parameter.
+!   TensorFlow calls this "loc".
+!
+! sigma : real scalar
+!   The scale parameter. Must be strictly positive.
+!   TensorFlow calls this "scale".
+!
+! nu : real scalar
+!   The skewness parameter.
+!   TensorFlow calls this "skewness".
+!
+! tau : real scalar
+!   The tail-weight parameter. Must be strictly positive.
+!   TensorFlow calls this "tailweight".
+!
+! Returns
+! -------
+! mode : real scalar
+!   The computed mode of shash(mu, sigma, nu, tau).
+!
+! Notes
+! -----
+! * This function is ELEMENTAL, so it may be called with scalar arguments. It
+!   may also be called with array arguments as long as all of the arrays are
+!   commensurate.
+!
+! * We cannot solve for the mode analytically, so we compute it
+!   numerically using Newton's method to find the root of the derivative
+!   of the density function.
+!
+! * We initialize the Newton's method iterations using the medians.
+!
+!------------------------------------------------------------------------------
+ELEMENTAL FUNCTION mode(mu, sigma, nu, tau)
+    REAL(8) :: mode
+    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
+
+    REAL(8) :: xi, eta, eps, delta
+    REAL(8) :: y, S, C, T, g, dg, deltay
+    INTEGER :: iteration
+
+    INTEGER, PARAMETER :: MAX_ITERATION = 100
+    REAL(8), PARAMETER :: TOLERANCE = 1.0e-4
+
+    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+
+    ! Use the median as the initial guess.
+    y = SINH(eps / delta)
+
+    ! Apply Newton's method.
+    DO iteration = 1, MAX_ITERATION
+        S = SINH(delta * ASINH(y) - eps)
+        C = COSH(delta * ASINH(y) - eps)
+        T = SQRT(1.0 + y**2)
+
+        ! g is the derivative of the pdf. dg is the derivative of g.
+        g = y + y * S**2 + delta * C * S**3 * T
+        dg = 1.0 + S**2 + delta**2 * S**2 * (3.0*C**2 + S**2) + 2.0*delta*C*S*(1.0 + S**2) * y/T
+
+        deltay = g/dg
+        y = y - deltay
+        IF (ABS(deltay) < TOLERANCE) EXIT
+    END DO
+
+    mode = xi + eta * y
+END FUNCTION mode
+
+
+!------------------------------------------------------------------------------
 ! FUNCTION variance(mu, sigma, nu, tau)
 !
-! Compute the distribution variance.
+! Compute the SHASH distribution variance.
 !
 ! Arguments
 ! ---------
@@ -564,7 +664,7 @@ END FUNCTION variance
 !------------------------------------------------------------------------------
 ! FUNCTION stddev(mu, sigma, nu, tau)
 !
-! Compute the distribution standard deviation.
+! Compute the SHASH distribution standard deviation.
 !
 ! Arguments
 ! ---------
@@ -606,7 +706,7 @@ END FUNCTION stddev
 !------------------------------------------------------------------------------
 ! FUNCTION skew(mu, sigma, nu, tau)
 !
-! Compute the distribution moment coefficient of skewness.
+! Compute the SHASH distribution moment coefficient of skewness.
 !
 ! Arguments
 ! ---------
@@ -629,7 +729,7 @@ END FUNCTION stddev
 ! Returns
 ! -------
 ! skew : real scalar
-!   The computed  skewness of shash(mu, sigma, nu, tau).
+!   The computed skewness of shash(mu, sigma, nu, tau).
 !
 ! Notes
 ! -----
@@ -662,6 +762,56 @@ ELEMENTAL FUNCTION skew(mu, sigma, nu, tau)
 
     skew = (evY3 - 3.0 * evY * stdY**2 - evY**3) / stdY**3
 END FUNCTION skew
+
+
+!------------------------------------------------------------------------------
+! SUBROUTINE compute_summary_statistics(mu, sigma, nu, tau, summary)
+!
+! Compute a set of summary statistics for the SHASH distribution
+!
+! Arguments
+! ---------
+! mu : real scalar
+!   The location parameter.
+!   TensorFlow calls this "loc".
+!
+! sigma : real scalar
+!   The scale parameter. Must be strictly positive.
+!   TensorFlow calls this "scale".
+!
+! nu : real scalar
+!   The skewness parameter.
+!   TensorFlow calls this "skewness".
+!
+! tau : real scalar
+!   The tail-weight parameter. Must be strictly positive.
+!   TensorFlow calls this "tailweight".
+!
+! summary : SUMMARY_STATISTICS, on output
+!
+! Notes
+! -----
+!
+!------------------------------------------------------------------------------
+FUNCTION compute_summary_statistics(mu, sigma, nu, tau) RESULT(summary)
+    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
+    TYPE (SUMMARY_STATISTICS) :: summary
+
+    summary%mean   = mean(mu, sigma, nu, tau)
+    summary%median = median(mu, sigma, nu, tau)
+    summary%mode   = mode(mu, sigma, nu, tau)
+
+    summary%percentile_10 = quantile(0.10_8, mu, sigma, nu, tau)
+    summary%percentile_25 = quantile(0.25_8, mu, sigma, nu, tau)
+    summary%percentile_75 = quantile(0.75_8, mu, sigma, nu, tau)
+    summary%percentile_90 = quantile(0.90_8, mu, sigma, nu, tau)
+
+    summary%interquartile_range = summary%percentile_75 - summary%percentile_25
+    summary%skew = skew(mu, sigma, nu, tau)
+
+    summary%stddev = stddev(mu, sigma, nu, tau)
+    summary%variance = variance(mu, sigma, nu, tau)
+END FUNCTION compute_summary_statistics
 
 
 !==============================================================================
@@ -859,26 +1009,44 @@ END FUNCTION jones_pewsey_p
 !
 ! Returns
 ! -------
-! f : real scalar
+! besselk : real scalar
 !   The value of $K_{v}(1/4)$.
 !
 ! Notes
 ! -----
-! * The standard relationship between Kv(z) and Iv(z) has singularities at
-!   v = 0 and v = 1, due to the sin(v*PI) term in the denominator. To eliminate
-!   these singularities we use a quadratic approximation around v = 0, and a
-!   linear approximation around v = 1.
+! * The standard relationship between Kv(z) and Iv(z) has computational
+!   singularities at v = 0, 1, 2, ..., due to the sin(v*PI) term in the
+!   denominator. To eliminate  these computational singularities we use
+!   a quadratic approximation around v = 0, a linear approximation around
+!   v = 1, and the standard forward recursion around v = 2, 3, ...
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION Kv(v) RESULT(f)
-    REAL(8) :: f
+ELEMENTAL FUNCTION Kv(v) RESULT(besselk)
+    REAL(8) :: besselk
     REAL(8), INTENT(IN) :: v
 
-    IF (ABS(v) < 1.0e-4) THEN
-        f = 1.541506751248303 + 1.491844425771660 * v**2
-    ELSEIF (ABS(v-1.0) < 1.0e-4) THEN
-        f = 3.747025974440712 + 6.166027005560792 * (v-1.0)
+    REAL(8), PARAMETER :: TOLERANCE = 1e-4
+    REAL(8) :: nu, besselk_minus1, besselk_plus1
+    INTEGER :: j
+
+    IF (ABS(v - NINT(v)) > TOLERANCE) THEN
+        besselk = PI_OVER_TWO * (Iv(-v) - Iv(v)) / SIN(v*PI)
+    ELSEIF (ABS(v) < TOLERANCE) THEN
+        besselk = 1.541506751248303 + 1.491844425771660 * v**2
+    ELSEIF (ABS(v - 1.0) < TOLERANCE) THEN
+        besselk = 3.747025974440712 + 6.166027005560792 * (v-1.0)
     ELSE
-        f = PI_OVER_TWO * (Iv(-v) - Iv(v)) / SIN(v*PI)
+        nu = 1.0 + v - NINT(v)
+
+        besselk_minus1 = 1.541506751248303 + 1.491844425771660 * (v - NINT(v))**2
+        besselk        = 3.747025974440712 + 6.166027005560792 * (v - NINT(v))
+
+        DO j = 1, (NINT(v) - 1)
+            besselk_plus1 = besselk_minus1 + 8.0*nu*besselk
+
+            nu = nu + 1.0
+            besselk_minus1 = besselk
+            besselk = besselk_plus1
+        END DO
     END IF
 END FUNCTION Kv
 
