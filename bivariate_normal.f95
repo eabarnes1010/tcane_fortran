@@ -58,45 +58,45 @@
 ! * 14 October 2022
 !
 !==============================================================================
-MODULE bivariate_normal_module
-IMPLICIT NONE
-PRIVATE
+module bivariate_normal_module
+implicit none
+private
 
 !------------------------------------------------------------------------------
 ! Interface block
 !------------------------------------------------------------------------------
-INTERFACE pdf
-    MODULE PROCEDURE pdf_elemental
-    MODULE PROCEDURE pdf_uv_array
-END INTERFACE
+interface pdf
+    module procedure pdf_elemental
+    module procedure pdf_uv_array
+end interface
 
-INTERFACE cdf
-    MODULE PROCEDURE mahalanobis_cdf_elemental
-    MODULE PROCEDURE mahalanobis_cdf_uv_array
-END INTERFACE
+interface cdf
+    module procedure mahalanobis_cdf_elemental
+    module procedure mahalanobis_cdf_uv_array
+end interface
 
-INTERFACE invcdf
-    MODULE PROCEDURE mahalanobis_inv_cdf
-END INTERFACE
+interface invcdf
+    module procedure mahalanobis_inv_cdf
+end interface
 
 
 !------------------------------------------------------------------------------
 ! Visibility
 !------------------------------------------------------------------------------
-PUBLIC pdf
-PUBLIC cdf
-PUBLIC invcdf
+public pdf
+public cdf
+public invcdf
 
 !---------------------------------------------------------------------------
 ! Mathematical constants
 !---------------------------------------------------------------------------
-REAL(8), PARAMETER :: PI                   = 3.1415926535897932384626434_8
-REAL(8), PARAMETER :: TWO_PI               = 6.2831853071795864769252868_8
-REAL(8), PARAMETER :: PI_OVER_TWO          = 1.5707963267948966192313217_8
-REAL(8), PARAMETER :: ONE_OVER_SQRT_TWO    = 0.7071067811865475244008444_8
-REAL(8), PARAMETER :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461_8
+real(8), parameter :: PI                   = 3.1415926535897932384626434_8
+real(8), parameter :: TWO_PI               = 6.2831853071795864769252868_8
+real(8), parameter :: PI_OVER_TWO          = 1.5707963267948966192313217_8
+real(8), parameter :: ONE_OVER_SQRT_TWO    = 0.7071067811865475244008444_8
+real(8), parameter :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461_8
 
-CONTAINS
+contains
 
 !------------------------------------------------------------------------------
 ! FUNCTION pdf_elemental(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
@@ -142,19 +142,19 @@ CONTAINS
 !   Page 2 of [1].
 !
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION pdf_elemental(u, v, mu_u, mu_v, sigma_u, sigma_v, rho) RESULT(pdf)
-    REAL(8), INTENT(IN) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
-    REAL(8) :: pdf
+elemental function pdf_elemental(u, v, mu_u, mu_v, sigma_u, sigma_v, rho) result(pdf)
+    real(8), intent(in) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
+    real(8) :: pdf
 
-    REAL(8) :: s, t, c, r_sqr
+    real(8) :: s, t, c, r_sqr
 
     s = (u - mu_u)/sigma_u
     t = (v - mu_v)/sigma_v
-    c = 1.0/(2.0*PI * sigma_u*sigma_v * SQRT(1.0 - rho**2))
+    c = 1.0/(2.0*PI * sigma_u*sigma_v * sqrt(1.0 - rho**2))
     r_sqr = 1.0 / (1.0 - rho**2) * (s*s - 2.0*rho*s*t + t*t)
 
-    pdf = c * EXP(-r_sqr/2.0)
-END FUNCTION pdf_elemental
+    pdf = c * exp(-r_sqr/2.0)
+end function pdf_elemental
 
 
 !------------------------------------------------------------------------------
@@ -197,20 +197,20 @@ END FUNCTION pdf_elemental
 !   Page 2 of [1].
 !
 !------------------------------------------------------------------------------
-PURE FUNCTION pdf_uv_array(u, v, mu_u, mu_v, sigma_u, sigma_v, rho) RESULT(pdf)
-    REAL(8), INTENT(IN) :: u(:), v(:)
-    REAL(8), INTENT(IN) :: mu_u, mu_v, sigma_u, sigma_v, rho
-    REAL(8), DIMENSION( SIZE(u) ) :: pdf
+pure function pdf_uv_array(u, v, mu_u, mu_v, sigma_u, sigma_v, rho) result(pdf)
+    real(8), intent(in) :: u(:), v(:)
+    real(8), intent(in) :: mu_u, mu_v, sigma_u, sigma_v, rho
+    real(8), dimension( size(u) ) :: pdf
 
-    REAL(8), DIMENSION( SIZE(u)) :: s, t, c, r_sqr
+    real(8), dimension( size(u)) :: s, t, c, r_sqr
 
     s = (u - mu_u)/sigma_u
     t = (v - mu_v)/sigma_v
-    c = 1.0/(2.0*PI * sigma_u * sigma_v * SQRT(1.0 - rho**2))
+    c = 1.0/(2.0*PI * sigma_u * sigma_v * sqrt(1.0 - rho**2))
     r_sqr = 1.0 / (1.0 - rho**2) * (s*s - 2.0*rho*s*t + t*t)
 
-    pdf = c * EXP(-r_sqr/2.0)
-END FUNCTION pdf_uv_array
+    pdf = c * exp(-r_sqr/2.0)
+end function pdf_uv_array
 
 
 !------------------------------------------------------------------------------
@@ -262,18 +262,18 @@ END FUNCTION pdf_uv_array
 !   Page 4 of [1].
 !
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION mahalanobis_cdf_elemental(u, v, mu_u, mu_v, sigma_u, sigma_v, rho) RESULT(cdf)
-    REAL(8), INTENT(IN) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
-    REAL(8) :: cdf
+elemental function mahalanobis_cdf_elemental(u, v, mu_u, mu_v, sigma_u, sigma_v, rho) result(cdf)
+    real(8), intent(in) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
+    real(8) :: cdf
 
-    REAL(8) :: s, t, r_sqr
+    real(8) :: s, t, r_sqr
 
     s = (u - mu_u)/sigma_u
     t = (v - mu_v)/sigma_v
     r_sqr = 1.0 / (1.0 - rho**2) * (s*s - 2.0*rho*s*t + t*t)
 
-    cdf = 1.0 - EXP(-r_sqr/2.0)
-END FUNCTION mahalanobis_cdf_elemental
+    cdf = 1.0 - exp(-r_sqr/2.0)
+end function mahalanobis_cdf_elemental
 
 
 !------------------------------------------------------------------------------
@@ -321,19 +321,19 @@ END FUNCTION mahalanobis_cdf_elemental
 !   Page 4 of [1].
 !
 !------------------------------------------------------------------------------
-PURE FUNCTION mahalanobis_cdf_uv_array(u, v, mu_u, mu_v, sigma_u, sigma_v, rho) RESULT(cdf)
-    REAL(8), INTENT(IN) :: u(:), v(:)
-    REAL(8), INTENT(IN) :: mu_u, mu_v, sigma_u, sigma_v, rho
-    REAL(8), DIMENSION( SIZE(u) ) :: cdf
+pure function mahalanobis_cdf_uv_array(u, v, mu_u, mu_v, sigma_u, sigma_v, rho) result(cdf)
+    real(8), intent(in) :: u(:), v(:)
+    real(8), intent(in) :: mu_u, mu_v, sigma_u, sigma_v, rho
+    real(8), dimension( size(u) ) :: cdf
 
-    REAL(8), DIMENSION( SIZE(u)) :: s, t, r_sqr
+    real(8), dimension( size(u)) :: s, t, r_sqr
 
     s = (u - mu_u)/sigma_u
     t = (v - mu_v)/sigma_v
     r_sqr = 1.0 / (1.0 - rho**2) * (s*s - 2.0*rho*s*t + t*t)
 
-    cdf = 1.0 - EXP(-r_sqr/2.0)
-END FUNCTION mahalanobis_cdf_uv_array
+    cdf = 1.0 - exp(-r_sqr/2.0)
+end function mahalanobis_cdf_uv_array
 
 
 !------------------------------------------------------------------------------
@@ -377,22 +377,22 @@ END FUNCTION mahalanobis_cdf_uv_array
 !   order and the first and last points coincide.
 !
 !------------------------------------------------------------------------------
-SUBROUTINE mahalanobis_inv_cdf(pr, mu_u, mu_v, sigma_u, sigma_v, rho, u, v)
-    REAL(8), INTENT(IN) :: pr, mu_u, mu_v, sigma_u, sigma_v, rho
+subroutine mahalanobis_inv_cdf(pr, mu_u, mu_v, sigma_u, sigma_v, rho, u, v)
+    real(8), intent(in) :: pr, mu_u, mu_v, sigma_u, sigma_v, rho
 
-    INTEGER :: I
-    INTEGER, PARAMETER :: NPOINTS = 1001
-    REAL(8), DIMENSION(NPOINTS), PARAMETER :: THETA = (/ (REAL(I)*TWO_PI/(NPOINTS-1), I = 0, NPOINTS-1) /)
-    REAL(8), DIMENSION(NPOINTS), INTENT(OUT) :: u, v
+    integer :: I
+    integer, parameter :: NPOINTS = 1001
+    real(8), dimension(NPOINTS), parameter :: THETA = (/ (real(I)*TWO_PI/(NPOINTS-1), I = 0, NPOINTS-1) /)
+    real(8), dimension(NPOINTS), intent(out) :: u, v
 
-    REAL(8) :: r
+    real(8) :: r
 
-    r = SQRT(-2.0 * (LOG(1.0 - pr)))
-    u = r * sigma_u * COS(THETA) + mu_u
-    v = r * sigma_v * (rho * COS(THETA) + SQRT(1.0 - rho**2) * SIN(THETA)) + mu_v
-END SUBROUTINE mahalanobis_inv_cdf
+    r = sqrt(-2.0 * (log(1.0 - pr)))
+    u = r * sigma_u * cos(THETA) + mu_u
+    v = r * sigma_v * (rho * cos(THETA) + sqrt(1.0 - rho**2) * sin(THETA)) + mu_v
+end subroutine mahalanobis_inv_cdf
 
 
 !==============================================================================
-END MODULE bivariate_normal_module
+end module bivariate_normal_module
 !==============================================================================

@@ -32,28 +32,28 @@
 ! * 14 October 2022
 !
 !==============================================================================
-SUBROUTINE test_bivariate_normal()
-    WRITE(*,*) '====================='
-    WRITE(*,*) 'test_bivariate_normal'
-    WRITE(*,*) '====================='
+subroutine test_bivariate_normal()
+    write(*,*) '====================='
+    write(*,*) 'test_bivariate_normal'
+    write(*,*) '====================='
 
-    CALL test_bivariate_normal_pdf_scalar()
-    CALL test_bivariate_normal_pdf_elemental()
-    CALL test_bivariate_normal_pdf_uv_array()
+    call test_bivariate_normal_pdf_scalar()
+    call test_bivariate_normal_pdf_elemental()
+    call test_bivariate_normal_pdf_uv_array()
 
-    CALL test_bivariate_normal_cdf_scalar()
-    CALL test_bivariate_normal_cdf_elemental()
-    CALL test_bivariate_normal_cdf_uv_array()
-END SUBROUTINE test_bivariate_normal
+    call test_bivariate_normal_cdf_scalar()
+    call test_bivariate_normal_cdf_elemental()
+    call test_bivariate_normal_cdf_uv_array()
+end subroutine test_bivariate_normal
 
 
 !------------------------------------------------------------------------------
-SUBROUTINE test_bivariate_normal_pdf_scalar()
-    USE bivariate_normal_module
-    IMPLICIT NONE
+subroutine test_bivariate_normal_pdf_scalar()
+    use bivariate_normal_module
+    implicit none
 
-    REAL(8) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
-    REAL(8) :: computed, truth
+    real(8) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
+    real(8) :: computed, truth
 
     u       = 4.5
     v       = 1.5
@@ -65,18 +65,18 @@ SUBROUTINE test_bivariate_normal_pdf_scalar()
 
     computed = pdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
     truth    = 0.0172512689915052
-    WRITE(*,*) 'test_bivariate_normal_pdf_scalar:           max_abs_error = ', ABS(computed-truth)
-END SUBROUTINE test_bivariate_normal_pdf_scalar
+    write(*,*) 'test_bivariate_normal_pdf_scalar:           max_abs_error = ', abs(computed-truth)
+end subroutine test_bivariate_normal_pdf_scalar
 
 
 !------------------------------------------------------------------------------
-SUBROUTINE test_bivariate_normal_pdf_elemental()
-    USE bivariate_normal_module
-    IMPLICIT NONE
+subroutine test_bivariate_normal_pdf_elemental()
+    use bivariate_normal_module
+    implicit none
 
 
-    REAL(8), DIMENSION(4) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
-    REAL(8), DIMENSION( SIZE(u) ) :: computed, truth
+    real(8), dimension(4) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
+    real(8), dimension( size(u) ) :: computed, truth
 
     u       = [8.0, 9.0, 2.0, 9.0]
     v       = [4.0, 9.0, 8.0, 9.0]
@@ -88,18 +88,18 @@ SUBROUTINE test_bivariate_normal_pdf_elemental()
 
     computed = pdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
     truth    = [0.002641689, 0.002237701, 0.000023018, 0.009171173]
-    WRITE(*,*) 'test_bivariate_normal_pdf_elemental:        max_abs_error = ', MAXVAL(ABS(computed-truth))
-END SUBROUTINE test_bivariate_normal_pdf_elemental
+    write(*,*) 'test_bivariate_normal_pdf_elemental:        max_abs_error = ', maxval(abs(computed-truth))
+end subroutine test_bivariate_normal_pdf_elemental
 
 
 !------------------------------------------------------------------------------
-SUBROUTINE test_bivariate_normal_pdf_uv_array()
-    USE bivariate_normal_module
-    IMPLICIT NONE
+subroutine test_bivariate_normal_pdf_uv_array()
+    use bivariate_normal_module
+    implicit none
 
-    REAL(8), DIMENSION(4) :: u, v
-    REAL(8) :: mu_u, mu_v, sigma_u, sigma_v, rho
-    REAL(8), DIMENSION( SIZE(u) ) :: computed, truth
+    real(8), dimension(4) :: u, v
+    real(8) :: mu_u, mu_v, sigma_u, sigma_v, rho
+    real(8), dimension( size(u) ) :: computed, truth
 
     u       = [8.0, 9.0, 2.0, 9.0]
     v       = [4.0, 9.0, 8.0, 9.0]
@@ -111,17 +111,17 @@ SUBROUTINE test_bivariate_normal_pdf_uv_array()
 
     computed = pdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
     truth    = [0.002641689, 0.001442926, 0.001662721, 0.001442926]
-    WRITE(*,*) 'test_bivariate_normal_pdf_uv_array:         max_abs_error = ', MAXVAL(ABS(computed-truth))
-END SUBROUTINE test_bivariate_normal_pdf_uv_array
+    write(*,*) 'test_bivariate_normal_pdf_uv_array:         max_abs_error = ', maxval(abs(computed-truth))
+end subroutine test_bivariate_normal_pdf_uv_array
 
 
 !------------------------------------------------------------------------------
-SUBROUTINE test_bivariate_normal_cdf_scalar()
-    USE bivariate_normal_module
-    IMPLICIT NONE
+subroutine test_bivariate_normal_cdf_scalar()
+    use bivariate_normal_module
+    implicit none
 
-    REAL(8) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
-    REAL(8) :: computed, truth
+    real(8) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
+    real(8) :: computed, truth
 
     u       = 4.5
     v       = 1.5
@@ -133,18 +133,18 @@ SUBROUTINE test_bivariate_normal_cdf_scalar()
 
     computed = cdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
     truth    = 0.436773866877541
-    WRITE(*,*) 'test_bivariate_normal_cdf_scalar:           max_abs_error = ', ABS(computed-truth)
-END SUBROUTINE test_bivariate_normal_cdf_scalar
+    write(*,*) 'test_bivariate_normal_cdf_scalar:           max_abs_error = ', abs(computed-truth)
+end subroutine test_bivariate_normal_cdf_scalar
 
 
 !------------------------------------------------------------------------------
-SUBROUTINE test_bivariate_normal_cdf_elemental()
-    USE bivariate_normal_module
-    IMPLICIT NONE
+subroutine test_bivariate_normal_cdf_elemental()
+    use bivariate_normal_module
+    implicit none
 
 
-    REAL(8), DIMENSION(4) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
-    REAL(8), DIMENSION( SIZE(u) ) :: computed, truth
+    real(8), dimension(4) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
+    real(8), dimension( size(u) ) :: computed, truth
 
     u       = [8.0, 9.0, 2.0, 9.0]
     v       = [4.0, 9.0, 8.0, 9.0]
@@ -156,18 +156,18 @@ SUBROUTINE test_bivariate_normal_cdf_elemental()
 
     computed = cdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
     truth    = [0.121805190516559, 0.89270174122853, 0.998958698546541, 0.175450574637629]
-    WRITE(*,*) 'test_bivariate_normal_cdf_elemental:        max_abs_error = ', MAXVAL(ABS(computed-truth))
-END SUBROUTINE test_bivariate_normal_cdf_elemental
+    write(*,*) 'test_bivariate_normal_cdf_elemental:        max_abs_error = ', maxval(abs(computed-truth))
+end subroutine test_bivariate_normal_cdf_elemental
 
 
 !------------------------------------------------------------------------------
-SUBROUTINE test_bivariate_normal_cdf_uv_array()
-    USE bivariate_normal_module
-    IMPLICIT NONE
+subroutine test_bivariate_normal_cdf_uv_array()
+    use bivariate_normal_module
+    implicit none
 
-    REAL(8), DIMENSION(4) :: u, v
-    REAL(8) :: mu_u, mu_v, sigma_u, sigma_v, rho
-    REAL(8), DIMENSION( SIZE(u) ) :: computed, truth
+    real(8), dimension(4) :: u, v
+    real(8) :: mu_u, mu_v, sigma_u, sigma_v, rho
+    real(8), dimension( size(u) ) :: computed, truth
 
     u       = [8.0, 9.0, 2.0, 9.0]
     v       = [4.0, 9.0, 8.0, 9.0]
@@ -179,7 +179,7 @@ SUBROUTINE test_bivariate_normal_cdf_uv_array()
 
     computed = cdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
     truth    = [0.121805190516559, 0.520318147269926, 0.447250185167959, 0.520318147269926]
-    WRITE(*,*) 'test_bivariate_normal_cdf_uv_array:         max_abs_error = ', MAXVAL(ABS(computed-truth))
-END SUBROUTINE test_bivariate_normal_cdf_uv_array
+    write(*,*) 'test_bivariate_normal_cdf_uv_array:         max_abs_error = ', maxval(abs(computed-truth))
+end subroutine test_bivariate_normal_cdf_uv_array
 
 

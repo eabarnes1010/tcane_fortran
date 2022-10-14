@@ -99,66 +99,66 @@
 ! * 14 October 2022
 !
 !==============================================================================
-MODULE shash_module
-IMPLICIT NONE
-PRIVATE
+module shash_module
+implicit none
+private
 
 !---------------------------------------------------------------------------
 ! Defined types
 !---------------------------------------------------------------------------
-TYPE SUMMARY_STATISTICS
-    REAL(8) :: interquartile_range
-    REAL(8) :: mean
-    REAL(8) :: median
-    REAL(8) :: mode
-    REAL(8) :: percentile_10
-    REAL(8) :: percentile_25
-    REAL(8) :: percentile_75
-    REAL(8) :: percentile_90
-    REAL(8) :: skew
-    REAL(8) :: stddev
-    REAL(8) :: variance
-END TYPE
+type SUMMARY_STATISTICS
+    real(8) :: interquartile_range
+    real(8) :: mean
+    real(8) :: median
+    real(8) :: mode
+    real(8) :: percentile_10
+    real(8) :: percentile_25
+    real(8) :: percentile_75
+    real(8) :: percentile_90
+    real(8) :: skew
+    real(8) :: stddev
+    real(8) :: variance
+end type
 
 !------------------------------------------------------------------------------
 ! Interface block
 !------------------------------------------------------------------------------
-INTERFACE pdf
-   MODULE PROCEDURE pdf_elemental
-   MODULE PROCEDURE pdf_x_array
-END INTERFACE
+interface pdf
+   module procedure pdf_elemental
+   module procedure pdf_x_array
+end interface
 
-INTERFACE cdf
-   MODULE PROCEDURE cdf_elemental
-   MODULE PROCEDURE cdf_x_array
-END INTERFACE
+interface cdf
+   module procedure cdf_elemental
+   module procedure cdf_x_array
+end interface
 
 !------------------------------------------------------------------------------
 ! Visibility
 !------------------------------------------------------------------------------
-PUBLIC pdf
-PUBLIC cdf
-PUBLIC quantile
-PUBLIC median
-PUBLIC mean
-PUBLIC mode
-PUBLIC variance
-PUBLIC stddev
-PUBLIC skew
+public pdf
+public cdf
+public quantile
+public median
+public mean
+public mode
+public variance
+public stddev
+public skew
 
-PUBLIC SUMMARY_STATISTICS
-PUBLIC compute_summary_statistics
+public SUMMARY_STATISTICS
+public compute_summary_statistics
 
 !---------------------------------------------------------------------------
 ! Mathematical constants
 !---------------------------------------------------------------------------
-REAL(8), PARAMETER :: PI                   = 3.1415926535897932384626434_8
-REAL(8), PARAMETER :: PI_OVER_TWO          = 1.5707963267948966192313217_8
-REAL(8), PARAMETER :: ONE_OVER_SQRT_TWO    = 0.7071067811865475244008444_8
-REAL(8), PARAMETER :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461_8
+real(8), parameter :: PI                   = 3.1415926535897932384626434_8
+real(8), parameter :: PI_OVER_TWO          = 1.5707963267948966192313217_8
+real(8), parameter :: ONE_OVER_SQRT_TWO    = 0.7071067811865475244008444_8
+real(8), parameter :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461_8
 
 
-CONTAINS
+contains
 
 !------------------------------------------------------------------------------
 ! FUNCTION pdf_elemental(x, mu, sigma, nu, tau)
@@ -198,20 +198,20 @@ CONTAINS
 !   may also be called with array arguments as long as all of the arrays are
 !   commensurate.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION pdf_elemental(x, mu, sigma, nu, tau) RESULT(pdf)
-    REAL(8) :: pdf
-    REAL(8), INTENT(IN) :: x, mu, sigma, nu, tau
+elemental function pdf_elemental(x, mu, sigma, nu, tau) result(pdf)
+    real(8) :: pdf
+    real(8), intent(in) :: x, mu, sigma, nu, tau
 
-    REAL(8) :: xi, eta, eps, delta
-    REAL(8) :: y, z
+    real(8) :: xi, eta, eps, delta
+    real(8) :: y, z
 
-    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) Equation (2) on page 762.
     y = (x - xi) / eta
-    z = SINH(delta * ASINH(y) - eps)
-    pdf = ONE_OVER_SQRT_TWO_PI * (delta / eta) * SQRT((1.0 + z*z) / (1.0 + y*y)) * EXP(-z*z / 2.0)
-END FUNCTION pdf_elemental
+    z = sinh(delta * asinh(y) - eps)
+    pdf = ONE_OVER_SQRT_TWO_PI * (delta / eta) * sqrt((1.0 + z**2) / (1.0 + y**2)) * exp(-z**2 / 2.0)
+end function pdf_elemental
 
 
 !------------------------------------------------------------------------------
@@ -246,21 +246,21 @@ END FUNCTION pdf_elemental
 !   The computed shash(mu, sigma, nu, tau) probability density function
 !   evaluated at x.  pdf is the same size as x.
 !------------------------------------------------------------------------------
-PURE FUNCTION pdf_x_array(x, mu, sigma, nu, tau) RESULT(pdf)
-    REAL(8), INTENT(IN) :: x(:)
-    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
-    REAL(8), DIMENSION( SIZE(x) ) :: pdf
+pure function pdf_x_array(x, mu, sigma, nu, tau) result(pdf)
+    real(8), intent(in) :: x(:)
+    real(8), intent(in) :: mu, sigma, nu, tau
+    real(8), dimension( size(x) ) :: pdf
 
-    REAL(8) :: xi, eta, eps, delta
-    REAL(8), DIMENSION( SIZE(x) ) :: y, z
+    real(8) :: xi, eta, eps, delta
+    real(8), dimension( size(x) ) :: y, z
 
-    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) Equation (2) on page 762.
     y = (x - xi) / eta
-    z = SINH(delta * ASINH(y) - eps)
-    pdf = ONE_OVER_SQRT_TWO_PI * (delta / eta) * SQRT((1.0 + z*z) / (1.0 + y*y)) * EXP(-z*z / 2.0)
-END FUNCTION pdf_x_array
+    z = sinh(delta * asinh(y) - eps)
+    pdf = ONE_OVER_SQRT_TWO_PI * (delta / eta) * sqrt((1.0 + z*z) / (1.0 + y*y)) * exp(-z*z / 2.0)
+end function pdf_x_array
 
 
 !------------------------------------------------------------------------------
@@ -301,20 +301,20 @@ END FUNCTION pdf_x_array
 !   may also be called with array arguments as long as all of the arrays are
 !   commensurate.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION cdf_elemental(x, mu, sigma, nu, tau) RESULT(CDF)
-    REAL(8) :: cdf
-    REAL(8), INTENT(IN) :: x, mu, sigma, nu, tau
+elemental function cdf_elemental(x, mu, sigma, nu, tau) result(cdf)
+    real(8), intent(in) :: x, mu, sigma, nu, tau
+    real(8) :: cdf
 
-    REAL(8) :: xi, eta, eps, delta
-    REAL(8) :: y, z
+    real(8) :: xi, eta, eps, delta
+    real(8) :: y, z
 
-    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) bottom of page 762.
     y = (x - xi) / eta
-    z = SINH(delta * ASINH(y) - eps)
-    cdf = 0.5 * (1.0 + ERF(ONE_OVER_SQRT_TWO * z))
-END FUNCTION cdf_elemental
+    z = sinh(delta * asinh(y) - eps)
+    cdf = 0.5 * (1.0 + erf(ONE_OVER_SQRT_TWO * z))
+end function cdf_elemental
 
 
 !------------------------------------------------------------------------------
@@ -349,21 +349,21 @@ END FUNCTION cdf_elemental
 !   The computed shash(mu, sigma, nu, tau) cumulative distribution function
 !   evaluated at x. cdf is the same size as x.
 !------------------------------------------------------------------------------
-PURE FUNCTION cdf_x_array(x, mu, sigma, nu, tau) RESULT(cdf)
-    REAL(8), INTENT(IN) :: x(:)
-    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
-    REAL(8), DIMENSION( SIZE(x) ) :: cdf
+pure function cdf_x_array(x, mu, sigma, nu, tau) result(cdf)
+    real(8), intent(in) :: x(:)
+    real(8), intent(in) :: mu, sigma, nu, tau
+    real(8), dimension( size(x) ) :: cdf
 
-    REAL(8) :: xi, eta, eps, delta
-    REAL(8), DIMENSION( SIZE(x) ) :: y, z
+    real(8) :: xi, eta, eps, delta
+    real(8), dimension( size(x) ) :: y, z
 
-    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) bottom of page 762.
     y = (x - xi) / eta
-    z = SINH(delta * ASINH(y) - eps)
-    cdf = 0.5 * (1.0 + ERF(ONE_OVER_SQRT_TWO * z))
-END FUNCTION cdf_x_array
+    z = sinh(delta * asinh(y) - eps)
+    cdf = 0.5 * (1.0 + erf(ONE_OVER_SQRT_TWO * z))
+end function cdf_x_array
 
 
 !------------------------------------------------------------------------------
@@ -411,35 +411,35 @@ END FUNCTION cdf_x_array
 !
 ! * If pr is out of the range 0 < pr < 1, this function fails.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION quantile(pr, mu, sigma, nu, tau)
-    REAL(8) :: quantile
-    REAL(8), INTENT(IN) :: pr, mu, sigma, nu, tau
+elemental function quantile(pr, mu, sigma, nu, tau)
+    real(8) :: quantile
+    real(8), intent(in) :: pr, mu, sigma, nu, tau
 
-    REAL(8) :: xi, eta, eps, delta
-    REAL(8) :: z, x
+    real(8) :: xi, eta, eps, delta
+    real(8) :: z, x
 
-    INTEGER :: iteration
-    INTEGER, PARAMETER :: MAX_ITERATION = 5
+    integer :: iteration
+    integer, parameter :: MAX_ITERATION = 5
 
-    REAL(8) :: difference
-    REAL(8), PARAMETER :: MAX_ABS_DIFFERENCE = 1.0e-6
+    real(8) :: difference
+    real(8), parameter :: MAX_ABS_DIFFERENCE = 1.0e-6
 
-    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) bottom of page 762, and an approximate
     ! Gaussian cdf inverse, to get an initial approximation.
     z = gaussian_cdf_inv(pr)
-    x = xi + eta * SINH((ASINH(z) + eps) / delta)
+    x = xi + eta * sinh((asinh(z) + eps) / delta)
 
     ! Improve the approximation using Newton's method.
-    DO iteration = 1, MAX_ITERATION
+    do iteration = 1, MAX_ITERATION
         difference = cdf(x, mu, sigma, nu, tau) - pr
         x = x - difference/pdf(x, mu, sigma, nu, tau)
-        IF (ABS(difference) <= MAX_ABS_DIFFERENCE) EXIT
-    END DO
+        if (abs(difference) <= MAX_ABS_DIFFERENCE) exit
+    end do
 
     quantile = x
-END FUNCTION quantile
+end function quantile
 
 
 !------------------------------------------------------------------------------
@@ -476,19 +476,19 @@ END FUNCTION quantile
 !   may also be called with array arguments as long as all of the arrays are
 !   commensurate.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION mean(mu, sigma, nu, tau)
-    REAL(8) :: mean
-    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
+elemental function mean(mu, sigma, nu, tau)
+    real(8) :: mean
+    real(8), intent(in) :: mu, sigma, nu, tau
 
-    REAL(8) :: xi, eta, eps, delta
-    REAL(8) :: evX
+    real(8) :: xi, eta, eps, delta
+    real(8) :: evX
 
-    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) middle of page 764.
-    evX = SINH(eps / delta) * jones_pewsey_p(1.0 / delta)
+    evX = sinh(eps / delta) * jones_pewsey_p(1.0 / delta)
     mean = xi + eta * evX
-END FUNCTION mean
+end function mean
 
 
 !------------------------------------------------------------------------------
@@ -527,17 +527,17 @@ END FUNCTION mean
 !
 ! * Unlike the quantile function, this is an exact computation.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION median(mu, sigma, nu, tau)
-    REAL(8) :: median
-    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
+elemental function median(mu, sigma, nu, tau)
+    real(8) :: median
+    real(8), intent(in) :: mu, sigma, nu, tau
 
-    REAL(8) :: xi, eta, eps, delta
+    real(8) :: xi, eta, eps, delta
 
-    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) bottom of page 762.
-    median = xi + eta * SINH(eps / delta)
-END FUNCTION median
+    median = xi + eta * sinh(eps / delta)
+end function median
 
 
 !------------------------------------------------------------------------------
@@ -581,27 +581,27 @@ END FUNCTION median
 ! * We initialize the Newton's method iterations using the medians.
 !
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION mode(mu, sigma, nu, tau)
-    REAL(8) :: mode
-    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
+elemental function mode(mu, sigma, nu, tau)
+    real(8) :: mode
+    real(8), intent(in) :: mu, sigma, nu, tau
 
-    REAL(8) :: xi, eta, eps, delta
-    REAL(8) :: y, S, C, T, g, dg, deltay
-    INTEGER :: iteration
+    real(8) :: xi, eta, eps, delta
+    real(8) :: y, S, C, T, g, dg, deltay
+    integer :: iteration
 
-    INTEGER, PARAMETER :: MAX_ITERATION = 100
-    REAL(8), PARAMETER :: TOLERANCE = 1.0e-4
+    integer, parameter :: MAX_ITERATION = 100
+    real(8), parameter :: TOLERANCE = 1.0e-4
 
-    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
 
     ! Use the median as the initial guess.
-    y = SINH(eps / delta)
+    y = sinh(eps / delta)
 
     ! Apply Newton's method.
-    DO iteration = 1, MAX_ITERATION
-        S = SINH(delta * ASINH(y) - eps)
-        C = COSH(delta * ASINH(y) - eps)
-        T = SQRT(1.0 + y**2)
+    do iteration = 1, MAX_ITERATION
+        S = sinh(delta * asinh(y) - eps)
+        C = cosh(delta * asinh(y) - eps)
+        T = sqrt(1.0 + y**2)
 
         ! g is the derivative of the pdf. dg is the derivative of g.
         g = y + y * S**2 + delta * C * S**3 * T
@@ -609,11 +609,11 @@ ELEMENTAL FUNCTION mode(mu, sigma, nu, tau)
 
         deltay = g/dg
         y = y - deltay
-        IF (ABS(deltay) < TOLERANCE) EXIT
-    END DO
+        if (abs(deltay) < TOLERANCE) exit
+    end do
 
     mode = xi + eta * y
-END FUNCTION mode
+end function mode
 
 
 !------------------------------------------------------------------------------
@@ -658,20 +658,20 @@ END FUNCTION mode
 ! * The E(X) and E(X^2) are computed using the moment equations given on
 !   page 764 of [1].
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION variance(mu, sigma, nu, tau)
-    REAL(8) :: variance
-    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
+elemental function variance(mu, sigma, nu, tau)
+    real(8) :: variance
+    real(8), intent(in) :: mu, sigma, nu, tau
 
-    REAL(8) :: xi, eta, eps, delta
-    REAL(8) :: evX, evX2
+    real(8) :: xi, eta, eps, delta
+    real(8) :: evX, evX2
 
-    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) middle of page 764.
-    evX = SINH(eps / delta) * jones_pewsey_p(1.0 / delta)
-    evX2 = (COSH(2.0 * eps / delta) * jones_pewsey_p(2.0 / delta) - 1.0) / 2.0
+    evX = sinh(eps / delta) * jones_pewsey_p(1.0 / delta)
+    evX2 = (cosh(2.0 * eps / delta) * jones_pewsey_p(2.0 / delta) - 1.0) / 2.0
     variance = eta**2 * (evX2 - evX**2)
-END FUNCTION variance
+end function variance
 
 
 !------------------------------------------------------------------------------
@@ -708,12 +708,12 @@ END FUNCTION variance
 !   may also be called with array arguments as long as all of the arrays are
 !   commensurate.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION stddev(mu, sigma, nu, tau)
-    REAL(8) :: stddev
-    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
+elemental function stddev(mu, sigma, nu, tau)
+    real(8) :: stddev
+    real(8), intent(in) :: mu, sigma, nu, tau
 
-    stddev = SQRT(variance(mu, sigma, nu, tau))
-END FUNCTION stddev
+    stddev = sqrt(variance(mu, sigma, nu, tau))
+end function stddev
 
 
 !------------------------------------------------------------------------------
@@ -754,27 +754,27 @@ END FUNCTION stddev
 !   the "third standardized moment", also known as "Fisher's moment coefficient
 !   of skewness", also known as "Pearson's moment coefficient of skewness".
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION skew(mu, sigma, nu, tau)
-    REAL(8) :: skew
-    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
+elemental function skew(mu, sigma, nu, tau)
+    real(8) :: skew
+    real(8), intent(in) :: mu, sigma, nu, tau
 
-    REAL(8) :: xi, eta, eps, delta
-    REAL(8) :: evX, evX2, evX3
-    REAL(8) :: evY, evY3, stdY
+    real(8) :: xi, eta, eps, delta
+    real(8) :: evX, evX2, evX3
+    real(8) :: evY, evY3, stdY
 
-    CALL convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) middle of page 764.
-    evX = SINH(eps / delta) * jones_pewsey_p(1.0 / delta)
-    evX2 = (COSH(2.0 * eps / delta) * jones_pewsey_p(2.0 / delta) - 1.0) / 2.0
-    evX3 = (SINH(3.0 * eps / delta) * jones_pewsey_p(3.0 / delta) - 3.0 * SINH(eps / delta) * jones_pewsey_p(1.0 / delta)) / 4.0
+    evX = sinh(eps / delta) * jones_pewsey_p(1.0 / delta)
+    evX2 = (cosh(2.0 * eps / delta) * jones_pewsey_p(2.0 / delta) - 1.0) / 2.0
+    evX3 = (sinh(3.0 * eps / delta) * jones_pewsey_p(3.0 / delta) - 3.0 * sinh(eps / delta) * jones_pewsey_p(1.0 / delta)) / 4.0
 
     evY = xi + eta * evX
     evY3 = xi**3 + 3.0 * xi**2 * eta * evX + 3.0 * xi * eta**2 * evX2 + eta**3 * evX3
-    stdY = eta * SQRT(evX2 - evX**2)
+    stdY = eta * sqrt(evX2 - evX**2)
 
     skew = (evY3 - 3.0 * evY * stdY**2 - evY**3) / stdY**3
-END FUNCTION skew
+end function skew
 
 
 !------------------------------------------------------------------------------
@@ -809,9 +809,9 @@ END FUNCTION skew
 !   commensurate.
 !
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION compute_summary_statistics(mu, sigma, nu, tau) RESULT(summary)
-    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
-    TYPE (SUMMARY_STATISTICS) :: summary
+elemental function compute_summary_statistics(mu, sigma, nu, tau) result(summary)
+    real(8), intent(in) :: mu, sigma, nu, tau
+    type (SUMMARY_STATISTICS) :: summary
 
     summary%mean   = mean(mu, sigma, nu, tau)
     summary%median = median(mu, sigma, nu, tau)
@@ -827,7 +827,7 @@ ELEMENTAL FUNCTION compute_summary_statistics(mu, sigma, nu, tau) RESULT(summary
 
     summary%stddev = stddev(mu, sigma, nu, tau)
     summary%variance = variance(mu, sigma, nu, tau)
-END FUNCTION compute_summary_statistics
+end function compute_summary_statistics
 
 
 !==============================================================================
@@ -867,15 +867,15 @@ END FUNCTION compute_summary_statistics
 !   reformulation does not save significant computational time while severly
 !   sacrificing clarity.
 !------------------------------------------------------------------------------
-ELEMENTAL SUBROUTINE convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
-    REAL(8), INTENT(IN) :: mu, sigma, nu, tau
-    REAL(8), INTENT(OUT) :: xi, eta, eps, delta
+elemental subroutine convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    real(8), intent(in) :: mu, sigma, nu, tau
+    real(8), intent(out) :: xi, eta, eps, delta
 
     xi    = mu
-    eta   = sigma * 2.0 / SINH(ASINH(2.0) * tau)
+    eta   = sigma * 2.0 / sinh(asinh(2.0) * tau)
     eps   = nu
     delta = 1.0 / tau
-END SUBROUTINE
+end subroutine
 
 
 !------------------------------------------------------------------------------
@@ -906,20 +906,20 @@ END SUBROUTINE
 ! * This FORTRAN code was inspired by John D. Cook's writeup found at:
 !   https://www.johndcook.com/blog/normal_cdf_inverse/.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION gaussian_cdf_inv(pr) RESULT(cdf_inv)
-    REAL(8) :: cdf_inv
-    REAL(8), INTENT(IN) :: pr
+elemental function gaussian_cdf_inv(pr) result(cdf_inv)
+    real(8) :: cdf_inv
+    real(8), intent(in) :: pr
 
-    IF (pr <= 0.0) THEN
-        cdf_inv = -HUGE(1.0_8)
-    ELSE IF (pr < 0.5) THEN
-        cdf_inv = -rational_approximation( SQRT(-2.0*LOG(pr)) )
-    ELSE IF (pr < 1.0) THEN
-        cdf_inv = rational_approximation( SQRT(-2.0*LOG(1.0 - pr)) )
-    ELSE
-        cdf_inv = HUGE(1.0_8)
-    END IF
-END FUNCTION gaussian_cdf_inv
+    if (pr <= 0.0) then
+        cdf_inv = -huge(1.0_8)
+    else if (pr < 0.5) then
+        cdf_inv = -rational_approximation( sqrt(-2.0*log(pr)) )
+    else if (pr < 1.0) then
+        cdf_inv = rational_approximation( sqrt(-2.0*log(1.0 - pr)) )
+    else
+        cdf_inv = huge(1.0_8)
+    end if
+end function gaussian_cdf_inv
 
 
 !------------------------------------------------------------------------------
@@ -952,15 +952,15 @@ END FUNCTION gaussian_cdf_inv
 ! with Formulas, Graphs, and Mathematical Tables, Dover Publications, 1965.
 ! ISBN: 978-0486612720.
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION rational_approximation(t)
-    REAL(8) :: rational_approximation
-    REAL(8), INTENT(IN) :: t
+elemental function rational_approximation(t)
+    real(8) :: rational_approximation
+    real(8), intent(in) :: t
 
-    REAL(8), PARAMETER :: c(3) = (/ 2.515517, 0.802853, 0.010328 /)
-    REAL(8), PARAMETER :: d(3) = (/ 1.432788, 0.189269, 0.001308 /)
+    real(8), parameter :: c(3) = (/ 2.515517, 0.802853, 0.010328 /)
+    real(8), parameter :: d(3) = (/ 1.432788, 0.189269, 0.001308 /)
 
     rational_approximation = t - ((c(3)*t + c(2))*t + c(1)) / (((d(3)*t + d(2))*t + d(1))*t + 1.0)
-END FUNCTION rational_approximation
+end function rational_approximation
 
 
 !------------------------------------------------------------------------------
@@ -999,12 +999,12 @@ END FUNCTION rational_approximation
 ! October 2009, pp. 761–780. DOI: 10.1093/biomet/asp053.
 !
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION jones_pewsey_p(q) RESULT(f)
-    REAL(8) :: f
-    REAL(8), INTENT(IN) :: q
+elemental function jones_pewsey_p(q) result(f)
+    real(8) :: f
+    real(8), intent(in) :: q
 
     f = 0.2561260139134036986353746_8 * (Kv((q+1.0)/2.0) + Kv((q-1.0)/2.0))
-END FUNCTION jones_pewsey_p
+end function jones_pewsey_p
 
 
 !------------------------------------------------------------------------------
@@ -1048,35 +1048,35 @@ END FUNCTION jones_pewsey_p
 ! Sons, Inc., 1996. ISBN 978-0471119630.
 !
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION Kv(v) RESULT(besselk)
-    REAL(8) :: besselk
-    REAL(8), INTENT(IN) :: v
+elemental function Kv(v) result(besselk)
+    real(8) :: besselk
+    real(8), intent(in) :: v
 
-    REAL(8), PARAMETER :: TOLERANCE = 1e-4
-    REAL(8) :: nu, besselk_minus1, besselk_plus1
-    INTEGER :: j
+    real(8), parameter :: TOLERANCE = 1e-4
+    real(8) :: nu, besselk_minus1, besselk_plus1
+    integer :: j
 
-    IF (ABS(v - NINT(v)) > TOLERANCE) THEN
-        besselk = PI_OVER_TWO * (Iv(-v) - Iv(v)) / SIN(v*PI)
-    ELSEIF (ABS(v) < TOLERANCE) THEN
+    if (abs(v - nint(v)) > TOLERANCE) then
+        besselk = PI_OVER_TWO * (Iv(-v) - Iv(v)) / sin(v*PI)
+    elseif (abs(v) < TOLERANCE) then
         besselk = 1.541506751248303 + 1.491844425771660 * v**2
-    ELSEIF (ABS(v - 1.0) < TOLERANCE) THEN
+    elseif (abs(v - 1.0) < TOLERANCE) then
         besselk = 3.747025974440712 + 6.166027005560792 * (v-1.0)
-    ELSE
-        nu = 1.0 + v - NINT(v)
+    else
+        nu = 1.0 + v - nint(v)
 
-        besselk_minus1 = 1.541506751248303 + 1.491844425771660 * (v - NINT(v))**2
-        besselk        = 3.747025974440712 + 6.166027005560792 * (v - NINT(v))
+        besselk_minus1 = 1.541506751248303 + 1.491844425771660 * (v - nint(v))**2
+        besselk        = 3.747025974440712 + 6.166027005560792 * (v - nint(v))
 
-        DO j = 1, (NINT(v) - 1)
+        do j = 1, (nint(v) - 1)
             besselk_plus1 = besselk_minus1 + 8.0*nu*besselk
 
             nu = nu + 1.0
             besselk_minus1 = besselk
             besselk = besselk_plus1
-        END DO
-    END IF
-END FUNCTION Kv
+        end do
+    end if
+end function Kv
 
 
 !------------------------------------------------------------------------------
@@ -1111,23 +1111,23 @@ END FUNCTION Kv
 ! Sons, Inc., 1996. ISBN 978-0471119630.
 !
 !------------------------------------------------------------------------------
-ELEMENTAL FUNCTION Iv(v) RESULT(f)
-    REAL(8) :: f
-    REAL(8), INTENT(IN) :: v
+elemental function Iv(v) result(f)
+    real(8) :: f
+    real(8), intent(in) :: v
 
-    REAL(8) :: term
-    INTEGER :: m
+    real(8) :: term
+    integer :: m
 
-    term = 1.0 / (8.0**v * GAMMA(v + 1.0))
+    term = 1.0 / (8.0**v * gamma(v + 1.0))
     f = term
 
-    DO m = 1, 6
+    do m = 1, 6
         term = term / (64.0 * m * (v+m))
         f = f + term
-    END DO
-END FUNCTION Iv
+    end do
+end function Iv
 
 
 !==============================================================================
-END MODULE shash_module
+end module shash_module
 !==============================================================================

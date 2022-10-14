@@ -30,10 +30,10 @@
 ! * 14 October 2022
 !
 !==============================================================================
-PROGRAM main
-    WRITE(*,*)
-    CALL test_shash()
-    WRITE(*,*)
-    CALL test_bivariate_normal()
-END PROGRAM main
+program main
+    write(*,*)
+    call test_shash()
+    write(*,*)
+    call test_bivariate_normal()
+end program main
 
