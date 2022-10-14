@@ -1,5 +1,5 @@
 !==============================================================================
-! bivariate_normal.f95                                               (10.12.22)
+! bivariate_normal.f95
 !
 ! FORTRAN-based bivariate normal distribution utility functions.
 !
@@ -21,7 +21,7 @@
 !   * u and v may be commensurate arrays, with scalar mu_u, mu_v,
 !       sigma_u, sigma_v, and rho
 !
-! inv_cdf(pr, mu_u, mu_v, sigma_u, sigma_v, rho, u, v)
+! compute_mahalanois_ellipse(pr, mu_u, mu_v, sigma_u, sigma_v, rho, u, v)
 !   Compute arrays of u and v coordinates defining the Mahalanobis ellipse
 !   that captures a probability of pr.
 !
@@ -75,21 +75,16 @@ interface cdf
     module procedure mahalanobis_cdf_uv_array
 end interface
 
-interface invcdf
-    module procedure mahalanobis_inv_cdf
-end interface
-
-
 !------------------------------------------------------------------------------
 ! Visibility
 !------------------------------------------------------------------------------
 public pdf
 public cdf
-public invcdf
+public compute_mahalanois_ellipse
 
-!---------------------------------------------------------------------------
+!------------------------------------------------------------------------------
 ! Mathematical constants
-!---------------------------------------------------------------------------
+!------------------------------------------------------------------------------
 real(8), parameter :: PI                   = 3.1415926535897932384626434_8
 real(8), parameter :: TWO_PI               = 6.2831853071795864769252868_8
 real(8), parameter :: PI_OVER_TWO          = 1.5707963267948966192313217_8
@@ -99,7 +94,7 @@ real(8), parameter :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461_8
 contains
 
 !------------------------------------------------------------------------------
-! FUNCTION pdf_elemental(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
+! function pdf_elemental(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
 !
 ! Compute the bivariate normal probability density function (pdf).
 !
@@ -134,10 +129,6 @@ contains
 !
 ! Notes
 ! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
-!
 ! * The equation for the returned pdf comes from the the bottom of
 !   Page 2 of [1].
 !
@@ -158,7 +149,7 @@ end function pdf_elemental
 
 
 !------------------------------------------------------------------------------
-! FUNCTION pdf_uv_array(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
+! function pdf_uv_array(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
 !
 ! Compute the bivariate normal probability density function (pdf).
 !
@@ -214,7 +205,7 @@ end function pdf_uv_array
 
 
 !------------------------------------------------------------------------------
-! FUNCTION mahalanobis_cdf_elemental(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
+! function mahalanobis_cdf_elemental(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
 !
 ! Compute the bivariate normal Mahalanobis cumulative distribution
 ! function (cdf).  That is, the probability that a point falls inside the
@@ -251,10 +242,6 @@ end function pdf_uv_array
 !
 ! Notes
 ! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
-!
 ! * The equations for the Mahalanobis distance, r_sqr, comes from
 !   the bottom of Page 2 in [1].
 !
@@ -277,7 +264,7 @@ end function mahalanobis_cdf_elemental
 
 
 !------------------------------------------------------------------------------
-! FUNCTION cdf_uv_array(u, v, mu_u, mu_v, sigma_u, sigma_v, rho, r, x, y)
+! function cdf_uv_array(u, v, mu_u, mu_v, sigma_u, sigma_v, rho, r, x, y)
 !
 ! Compute the bivariate normal Mahalanobis cumulative distribution
 ! function (cdf).  That is, the probability that a point falls inside the
@@ -377,20 +364,19 @@ end function mahalanobis_cdf_uv_array
 !   order and the first and last points coincide.
 !
 !------------------------------------------------------------------------------
-subroutine mahalanobis_inv_cdf(pr, mu_u, mu_v, sigma_u, sigma_v, rho, u, v)
+subroutine compute_mahalanois_ellipse(pr, mu_u, mu_v, sigma_u, sigma_v, rho, u, v)
     real(8), intent(in) :: pr, mu_u, mu_v, sigma_u, sigma_v, rho
-
-    integer :: I
     integer, parameter :: NPOINTS = 1001
-    real(8), dimension(NPOINTS), parameter :: THETA = (/ (real(I)*TWO_PI/(NPOINTS-1), I = 0, NPOINTS-1) /)
     real(8), dimension(NPOINTS), intent(out) :: u, v
 
+    integer :: I
+    real(8), dimension(NPOINTS), parameter :: THETA = [(real(I)*TWO_PI/(NPOINTS-1), I = 0, NPOINTS-1)]
     real(8) :: r
 
     r = sqrt(-2.0 * (log(1.0 - pr)))
     u = r * sigma_u * cos(THETA) + mu_u
     v = r * sigma_v * (rho * cos(THETA) + sqrt(1.0 - rho**2) * sin(THETA)) + mu_v
-end subroutine mahalanobis_inv_cdf
+end subroutine compute_mahalanois_ellipse
 
 
 !==============================================================================

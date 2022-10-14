@@ -5,63 +5,66 @@
 !
 ! Public functions
 ! ----------------
-! pdf(x, mu, sigma, nu, tau)
+! pdf(x, loc, sigma, skewness, tailweight)
 !   Compute the SHASH probability density function (pdf).
-!   * x, mu, sigma, nu, and tau may be scalars.
-!   * x, mu, sigma, nu, and tau may be commensurate arrays.
-!   * x may be an array with mu, sigma, nu, and tau scalars.
+!   * x, loc, sigma, skewness, and tailweight may be scalars.
+!   * x, loc, sigma, skewness, and tailweight may be commensurate arrays.
+!   * x may be an array with loc, sigma, skewness, and tailweight scalars.
 !
-! cdf(x, mu, sigma, nu, tau)
+! cdf(x, loc, sigma, skewness, tailweight)
 !   Compute the SHASH cumulative distribution function (cdf).
-!   * x, mu, sigma, nu, and tau may be scalars.
-!   * x, mu, sigma, nu, and tau may be commensurate arrays.
-!   * x may be an array with mu, sigma, nu, and tau scalars.
+!   * x, loc, sigma, skewness, and tailweight may be scalars.
+!   * x, loc, sigma, skewness, and tailweight may be commensurate arrays.
+!   * x may be an array with loc, sigma, skewness, and tailweight scalars.
 !
-! quantile(pr, mu, sigma, nu, tau)
+! quantile(pr, loc, sigma, skewness, tailweight)
 !   Compute the SHASH inverse cumulative distribution function: that is,
 !   find x such that cdf(x) = pr.
-!   * pr, mu, sigma, nu, and tau may be scalars.
-!   * pr, mu, sigma, nu, and tau may be commensurate arrays.
+!   * pr, loc, sigma, skewness, and tailweight may be scalars.
+!   * pr, loc, sigma, skewness, and tailweight may be commensurate arrays.
 !
-! median(mu, sigma, nu, tau)
+! median(loc, sigma, skewness, tailweight)
 !   Compute the distribution median.
-!   * mu, sigma, nu, and tau may be scalars.
-!   * mu, sigma, nu, and tau may be commensurate arrays.
+!   * loc, sigma, skewness, and tailweight may be scalars.
+!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
 !
-! mean(mu, sigma, nu, tau)
+! mean(loc, sigma, skewness, tailweight)
 !   Compute the distribution mean.
-!   * mu, sigma, nu, and tau may be scalars.
-!   * mu, sigma, nu, and tau may be commensurate arrays.
+!   * loc, sigma, skewness, and tailweight may be scalars.
+!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
 !
-! mode(mu, sigma, nu, tau)
+! mode(loc, sigma, skewness, tailweight)
 !   Compute the distribution mode.
-!   * mu, sigma, nu, and tau may be scalars.
-!   * mu, sigma, nu, and tau may be commensurate arrays.
+!   * loc, sigma, skewness, and tailweight may be scalars.
+!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
 !
-! variance(mu, sigma, nu, tau)
+! variance(loc, sigma, skewness, tailweight)
 !   Compute the distribution variance.
-!   * mu, sigma, nu, and tau may be scalars.
-!   * mu, sigma, nu, and tau may be commensurate arrays.
+!   * loc, sigma, skewness, and tailweight may be scalars.
+!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
 !
-! stddev(mu, sigma, nu, tau)
+! stddev(loc, sigma, skewness, tailweight)
 !   Compute the distribution standard deviation.
-!   * mu, sigma, nu, and tau may be scalars.
-!   * mu, sigma, nu, and tau may be commensurate arrays.
+!   * loc, sigma, skewness, and tailweight may be scalars.
+!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
 !
-! skew(mu, sigma, nu, tau)
+! skew(loc, sigma, skewness, tailweight)
 !   Compute the distribution moment coefficient of skewness.
-!   * mu, sigma, nu, and tau may be scalars.
-!   * mu, sigma, nu, and tau may be commensurate arrays.
+!   * loc, sigma, skewness, and tailweight may be scalars.
+!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
 !
-! compute_summary_statistics(mu, sigma, nu, tau)
+! compute_summary_statistics(loc, sigma, skewness, tailweight)
 !   Compute a suite of summary statistics.
-!   * mu, sigma, nu, and tau may be scalars.
-!   * mu, sigma, nu, and tau may be commensurate arrays.
+!   * loc, sigma, skewness, and tailweight may be scalars.
+!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
 !
 ! Notes
 ! -----
-! * The sinh-arcsinh normal distribution was defined in [1]. A more accessible,
-!   though less comprehensive, presentation is given in [2].
+! * The sinh-arcsinh normal distribution was defined in [1]. A more
+!   accessible, though less comprehensive, presentation is given in [2].
+!
+! * The argument "sigma" is the same as the Tensorflow "scale". We could not
+!   use "scale" because "scale" is the name of an intrinsic FORTRAN function.
 !
 ! * This code was tested using:
 !   GNU Fortran (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders) 12.2.0
@@ -103,10 +106,10 @@ module shash_module
 implicit none
 private
 
-!---------------------------------------------------------------------------
+!------------------------------------------------------------------------------
 ! Defined types
-!---------------------------------------------------------------------------
-type SUMMARY_STATISTICS
+!------------------------------------------------------------------------------
+type summary_statistics
     real(8) :: interquartile_range
     real(8) :: mean
     real(8) :: median
@@ -146,12 +149,12 @@ public variance
 public stddev
 public skew
 
-public SUMMARY_STATISTICS
+public summary_statistics
 public compute_summary_statistics
 
-!---------------------------------------------------------------------------
+!------------------------------------------------------------------------------
 ! Mathematical constants
-!---------------------------------------------------------------------------
+!------------------------------------------------------------------------------
 real(8), parameter :: PI                   = 3.1415926535897932384626434_8
 real(8), parameter :: PI_OVER_TWO          = 1.5707963267948966192313217_8
 real(8), parameter :: ONE_OVER_SQRT_TWO    = 0.7071067811865475244008444_8
@@ -161,7 +164,7 @@ real(8), parameter :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461_8
 contains
 
 !------------------------------------------------------------------------------
-! FUNCTION pdf_elemental(x, mu, sigma, nu, tau)
+! function pdf_elemental(x, loc, sigma, skewness, tailweight)
 !
 ! Compute the SHASH probability density function (pdf).
 !
@@ -170,42 +173,32 @@ contains
 ! x : real scalar
 !   The value at which to compute the SHASH probability density function.
 !
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
 ! Returns
 ! -------
 ! pdf : real scalar
-!   The computed shash(mu, sigma, nu, tau) probability density function
-!   evaluated at x.
+!   The computed probability density function evaluated at x.
 !
-! Notes
-! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
 !------------------------------------------------------------------------------
-elemental function pdf_elemental(x, mu, sigma, nu, tau) result(pdf)
+elemental function pdf_elemental(x, loc, sigma, skewness, tailweight) result(pdf)
     real(8) :: pdf
-    real(8), intent(in) :: x, mu, sigma, nu, tau
+    real(8), intent(in) :: x, loc, sigma, skewness, tailweight
 
     real(8) :: xi, eta, eps, delta
     real(8) :: y, z
 
-    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) Equation (2) on page 762.
     y = (x - xi) / eta
@@ -215,7 +208,7 @@ end function pdf_elemental
 
 
 !------------------------------------------------------------------------------
-! FUNCTION pdf_x_array(x, mu, sigma, nu, tau)
+! function pdf_x_array(x, loc, sigma, skewness, tailweight)
 !
 ! Compute the SHASH probability density function (pdf) for an array x.
 !
@@ -224,37 +217,34 @@ end function pdf_elemental
 ! x : real array
 !   The values at which to compute the SHASH probability density function.
 !
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
 ! Returns
 ! -------
 ! pdf : real array
-!   The computed shash(mu, sigma, nu, tau) probability density function
-!   evaluated at x.  pdf is the same size as x.
+!   The computed probability density function evaluated at x.  The returned
+!   pdf is the same size as x.
+!
 !------------------------------------------------------------------------------
-pure function pdf_x_array(x, mu, sigma, nu, tau) result(pdf)
+pure function pdf_x_array(x, loc, sigma, skewness, tailweight) result(pdf)
     real(8), intent(in) :: x(:)
-    real(8), intent(in) :: mu, sigma, nu, tau
+    real(8), intent(in) :: loc, sigma, skewness, tailweight
     real(8), dimension( size(x) ) :: pdf
 
     real(8) :: xi, eta, eps, delta
     real(8), dimension( size(x) ) :: y, z
 
-    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) Equation (2) on page 762.
     y = (x - xi) / eta
@@ -264,7 +254,7 @@ end function pdf_x_array
 
 
 !------------------------------------------------------------------------------
-! FUNCTION cdf_elemental(x, mu, sigma, nu, tau)
+! function cdf_elemental(x, loc, sigma, skewness, tailweight)
 !
 ! Compute the SHASH cumulative distribution function (cdf).
 !
@@ -273,42 +263,32 @@ end function pdf_x_array
 ! x : real scalar
 !   The value at which to compute the SHASH cumulative distribution function.
 !
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
 ! Returns
 ! -------
 ! cdf : real scalar
-!   The computed shash(mu, sigma, nu, tau) cumulative distribution function
-!   evaluated at x.
+!   The computed cumulative distribution function evaluated at x.
 !
-! Notes
-! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
 !------------------------------------------------------------------------------
-elemental function cdf_elemental(x, mu, sigma, nu, tau) result(cdf)
-    real(8), intent(in) :: x, mu, sigma, nu, tau
+elemental function cdf_elemental(x, loc, sigma, skewness, tailweight) result(cdf)
+    real(8), intent(in) :: x, loc, sigma, skewness, tailweight
     real(8) :: cdf
 
     real(8) :: xi, eta, eps, delta
     real(8) :: y, z
 
-    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) bottom of page 762.
     y = (x - xi) / eta
@@ -318,7 +298,7 @@ end function cdf_elemental
 
 
 !------------------------------------------------------------------------------
-! FUNCTION cdf_x_array(x, mu, sigma, nu, tau)
+! function cdf_x_array(x, loc, sigma, skewness, tailweight)
 !
 ! Compute the SHASH cumulative distribution function (cdf).
 !
@@ -327,37 +307,34 @@ end function cdf_elemental
 ! x : real array
 !   The values at which to compute the SHASH cumulative distribution function.
 !
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
 ! Returns
 ! -------
 ! cdf : real array
-!   The computed shash(mu, sigma, nu, tau) cumulative distribution function
-!   evaluated at x. cdf is the same size as x.
+!   The computed cumulative distribution function evaluated at x. The returned
+!   cdf is the same size as x.
+!
 !------------------------------------------------------------------------------
-pure function cdf_x_array(x, mu, sigma, nu, tau) result(cdf)
+pure function cdf_x_array(x, loc, sigma, skewness, tailweight) result(cdf)
     real(8), intent(in) :: x(:)
-    real(8), intent(in) :: mu, sigma, nu, tau
+    real(8), intent(in) :: loc, sigma, skewness, tailweight
     real(8), dimension( size(x) ) :: cdf
 
     real(8) :: xi, eta, eps, delta
     real(8), dimension( size(x) ) :: y, z
 
-    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) bottom of page 762.
     y = (x - xi) / eta
@@ -367,7 +344,7 @@ end function cdf_x_array
 
 
 !------------------------------------------------------------------------------
-! FUNCTION quantile(pr, mu, sigma, nu, tau)
+! function quantile(pr, loc, sigma, skewness, tailweight)
 !
 ! Compute the SHASH inverse cumulative distribution function: that is,
 ! find x such that cdf(x) = pr.
@@ -378,45 +355,36 @@ end function cdf_x_array
 !   The probability value at which to compute the SHASH inverse cumulative
 !   distribution function.
 !
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
 ! Returns
 ! -------
 ! quantile : real scalar
-!   The computed shash(mu, sigma, nu, tau) inverse cumulative distribution
-!   function evaluated at probability pr.
+!   The computed inverse cumulative distribution function evaluated
+!   at probability pr.
 !
 ! Notes
 ! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
-!
 ! * This function uses Newton's method, with a pretty good starting guess.
 !   The result is accurate (|error in pr| < 1e-6), but it is a bit slow.
 !
 ! * If pr is out of the range 0 < pr < 1, this function fails.
 !------------------------------------------------------------------------------
-elemental function quantile(pr, mu, sigma, nu, tau)
-    real(8) :: quantile
-    real(8), intent(in) :: pr, mu, sigma, nu, tau
+elemental function quantile(pr, loc, sigma, skewness, tailweight) result(x)
+    real(8), intent(in) :: pr, loc, sigma, skewness, tailweight
+    real(8) :: x
 
-    real(8) :: xi, eta, eps, delta
-    real(8) :: z, x
+    real(8) :: xi, eta, eps, delta, z
 
     integer :: iteration
     integer, parameter :: MAX_ITERATION = 5
@@ -424,7 +392,7 @@ elemental function quantile(pr, mu, sigma, nu, tau)
     real(8) :: difference
     real(8), parameter :: MAX_ABS_DIFFERENCE = 1.0e-6
 
-    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) bottom of page 762, and an approximate
     ! Gaussian cdf inverse, to get an initial approximation.
@@ -433,57 +401,46 @@ elemental function quantile(pr, mu, sigma, nu, tau)
 
     ! Improve the approximation using Newton's method.
     do iteration = 1, MAX_ITERATION
-        difference = cdf(x, mu, sigma, nu, tau) - pr
-        x = x - difference/pdf(x, mu, sigma, nu, tau)
+        difference = cdf(x, loc, sigma, skewness, tailweight) - pr
+        x = x - difference/pdf(x, loc, sigma, skewness, tailweight)
         if (abs(difference) <= MAX_ABS_DIFFERENCE) exit
     end do
-
-    quantile = x
 end function quantile
 
 
 !------------------------------------------------------------------------------
-! FUNCTION mean(mu, sigma, nu, tau)
+! function mean(loc, sigma, skewness, tailweight)
 !
 ! Compute the SHASH distribution mean.
 !
 ! Arguments
 ! ---------
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
 ! Returns
 ! -------
 ! mean : real scalar
-!   The computed mean of shash(mu, sigma, nu, tau).
+!   The computed mean.
 !
-! Notes
-! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
 !------------------------------------------------------------------------------
-elemental function mean(mu, sigma, nu, tau)
+elemental function mean(loc, sigma, skewness, tailweight)
     real(8) :: mean
-    real(8), intent(in) :: mu, sigma, nu, tau
+    real(8), intent(in) :: loc, sigma, skewness, tailweight
 
     real(8) :: xi, eta, eps, delta
     real(8) :: evX
 
-    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) middle of page 764.
     evX = sinh(eps / delta) * jones_pewsey_p(1.0 / delta)
@@ -492,48 +449,43 @@ end function mean
 
 
 !------------------------------------------------------------------------------
-! FUNCTION median(mu, sigma, nu, tau)
+! function median(loc, sigma, skewness, tailweight)
 !
 ! Compute the SHASH distribution median.
 !
 ! Arguments
 ! ---------
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
 ! Returns
 ! -------
 ! median : real scalar
-!   The computed median of shash(mu, sigma, nu, tau).
+!   The computed median.
 !
 ! Notes
 ! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
+! * Unlike the quantile function, this is an exact computation. This
+!   computation is also much faster than the quantile function.  As such, this
+!   function should be used in lieu of quantile(0.5, ...).
 !
-! * Unlike the quantile function, this is an exact computation.
 !------------------------------------------------------------------------------
-elemental function median(mu, sigma, nu, tau)
+elemental function median(loc, sigma, skewness, tailweight)
     real(8) :: median
-    real(8), intent(in) :: mu, sigma, nu, tau
+    real(8), intent(in) :: loc, sigma, skewness, tailweight
 
     real(8) :: xi, eta, eps, delta
 
-    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) bottom of page 762.
     median = xi + eta * sinh(eps / delta)
@@ -541,49 +493,41 @@ end function median
 
 
 !------------------------------------------------------------------------------
-! FUNCTION mode(mu, sigma, nu, tau)
+! function mode(loc, sigma, skewness, tailweight)
 !
 ! Compute the SHASH distribution mode.
 !
 ! Arguments
 ! ---------
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
 ! Returns
 ! -------
 ! mode : real scalar
-!   The computed mode of shash(mu, sigma, nu, tau).
+!   The computed mode.
 !
 ! Notes
 ! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
-!
 ! * We cannot solve for the mode analytically, so we compute it
 !   numerically using Newton's method to find the root of the derivative
 !   of the density function.
 !
-! * We initialize the Newton's method iterations using the medians.
+! * We initialize the Newton's method iterations using the median.
 !
 !------------------------------------------------------------------------------
-elemental function mode(mu, sigma, nu, tau)
+elemental function mode(loc, sigma, skewness, tailweight)
     real(8) :: mode
-    real(8), intent(in) :: mu, sigma, nu, tau
+    real(8), intent(in) :: loc, sigma, skewness, tailweight
 
     real(8) :: xi, eta, eps, delta
     real(8) :: y, S, C, T, g, dg, deltay
@@ -592,7 +536,7 @@ elemental function mode(mu, sigma, nu, tau)
     integer, parameter :: MAX_ITERATION = 100
     real(8), parameter :: TOLERANCE = 1.0e-4
 
-    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
 
     ! Use the median as the initial guess.
     y = sinh(eps / delta)
@@ -617,39 +561,31 @@ end function mode
 
 
 !------------------------------------------------------------------------------
-! FUNCTION variance(mu, sigma, nu, tau)
+! function variance(loc, sigma, skewness, tailweight)
 !
 ! Compute the SHASH distribution variance.
 !
 ! Arguments
 ! ---------
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
 ! Returns
 ! -------
 ! variance : real scalar
-!   The computed variance of shash(mu, sigma, nu, tau).
+!   The computed variance.
 !
 ! Notes
 ! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
-!
 ! * This code uses two basic formulas:
 !
 !   var(X) = E(X^2) - (E(X))^2
@@ -657,15 +593,16 @@ end function mode
 !
 ! * The E(X) and E(X^2) are computed using the moment equations given on
 !   page 764 of [1].
+!
 !------------------------------------------------------------------------------
-elemental function variance(mu, sigma, nu, tau)
+elemental function variance(loc, sigma, skewness, tailweight)
     real(8) :: variance
-    real(8), intent(in) :: mu, sigma, nu, tau
+    real(8), intent(in) :: loc, sigma, skewness, tailweight
 
     real(8) :: xi, eta, eps, delta
     real(8) :: evX, evX2
 
-    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) middle of page 764.
     evX = sinh(eps / delta) * jones_pewsey_p(1.0 / delta)
@@ -675,94 +612,77 @@ end function variance
 
 
 !------------------------------------------------------------------------------
-! FUNCTION stddev(mu, sigma, nu, tau)
+! function stddev(loc, sigma, skewness, tailweight)
 !
 ! Compute the SHASH distribution standard deviation.
 !
 ! Arguments
 ! ---------
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
 ! Returns
 ! -------
 ! stddev : real scalar
-!   The computed standard deviation of shash(mu, sigma, nu, tau).
+!   The computed standard deviation.
 !
-! Notes
-! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
 !------------------------------------------------------------------------------
-elemental function stddev(mu, sigma, nu, tau)
+elemental function stddev(loc, sigma, skewness, tailweight)
     real(8) :: stddev
-    real(8), intent(in) :: mu, sigma, nu, tau
+    real(8), intent(in) :: loc, sigma, skewness, tailweight
 
-    stddev = sqrt(variance(mu, sigma, nu, tau))
+    stddev = sqrt(variance(loc, sigma, skewness, tailweight))
 end function stddev
 
 
 !------------------------------------------------------------------------------
-! FUNCTION skew(mu, sigma, nu, tau)
+! function skew(loc, sigma, skewness, tailweight)
 !
 ! Compute the SHASH distribution moment coefficient of skewness.
 !
 ! Arguments
 ! ---------
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
 ! Returns
 ! -------
 ! skew : real scalar
-!   The computed skewness of shash(mu, sigma, nu, tau).
+!   The computed moment coefficient of skewness.
 !
 ! Notes
 ! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
+! * The moment coefficient of skewness is the third standardized moment. It
+!   is also known as "Pearson's moment coefficient of skewness".
 !
-! * This function computes the "moment coefficient of skewness", also known as
-!   the "third standardized moment", also known as "Fisher's moment coefficient
-!   of skewness", also known as "Pearson's moment coefficient of skewness".
 !------------------------------------------------------------------------------
-elemental function skew(mu, sigma, nu, tau)
+elemental function skew(loc, sigma, skewness, tailweight)
     real(8) :: skew
-    real(8), intent(in) :: mu, sigma, nu, tau
+    real(8), intent(in) :: loc, sigma, skewness, tailweight
 
     real(8) :: xi, eta, eps, delta
     real(8) :: evX, evX2, evX3
     real(8) :: evY, evY3, stdY
 
-    call convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+    call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
 
     ! Apply Jones and Pewsey (2009) middle of page 764.
     evX = sinh(eps / delta) * jones_pewsey_p(1.0 / delta)
@@ -778,55 +698,47 @@ end function skew
 
 
 !------------------------------------------------------------------------------
-! ELEMENTAL FUNCTION compute_summary_statistics(mu, sigma, nu, tau, summary)
+! ELEMENTAL function compute_summary_statistics(loc, sigma, skewness, tailweight, summary)
 !
 ! Compute a set of summary statistics for the SHASH distribution
 !
 ! Arguments
 ! ---------
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
-! summary : SUMMARY_STATISTICS, on output
-!
-! Notes
-! -----
-! * This function is ELEMENTAL, so it may be called with scalar arguments. It
-!   may also be called with array arguments as long as all of the arrays are
-!   commensurate.
+! Returns
+! -------
+! summary : summary_statistics, on output
 !
 !------------------------------------------------------------------------------
-elemental function compute_summary_statistics(mu, sigma, nu, tau) result(summary)
-    real(8), intent(in) :: mu, sigma, nu, tau
-    type (SUMMARY_STATISTICS) :: summary
+elemental function compute_summary_statistics(loc, sigma, skewness, tailweight) result(summary)
+    real(8), intent(in) :: loc, sigma, skewness, tailweight
+    type (summary_statistics) :: summary
 
-    summary%mean   = mean(mu, sigma, nu, tau)
-    summary%median = median(mu, sigma, nu, tau)
-    summary%mode   = mode(mu, sigma, nu, tau)
+    summary%mean   = mean(loc, sigma, skewness, tailweight)
+    summary%median = median(loc, sigma, skewness, tailweight)
+    summary%mode   = mode(loc, sigma, skewness, tailweight)
 
-    summary%percentile_10 = quantile(0.10_8, mu, sigma, nu, tau)
-    summary%percentile_25 = quantile(0.25_8, mu, sigma, nu, tau)
-    summary%percentile_75 = quantile(0.75_8, mu, sigma, nu, tau)
-    summary%percentile_90 = quantile(0.90_8, mu, sigma, nu, tau)
+    summary%percentile_10 = quantile(0.10_8, loc, sigma, skewness, tailweight)
+    summary%percentile_25 = quantile(0.25_8, loc, sigma, skewness, tailweight)
+    summary%percentile_75 = quantile(0.75_8, loc, sigma, skewness, tailweight)
+    summary%percentile_90 = quantile(0.90_8, loc, sigma, skewness, tailweight)
 
     summary%interquartile_range = summary%percentile_75 - summary%percentile_25
-    summary%skew = skew(mu, sigma, nu, tau)
+    summary%skew = skew(loc, sigma, skewness, tailweight)
 
-    summary%stddev = stddev(mu, sigma, nu, tau)
-    summary%variance = variance(mu, sigma, nu, tau)
+    summary%stddev = stddev(loc, sigma, skewness, tailweight)
+    summary%variance = variance(loc, sigma, skewness, tailweight)
 end function compute_summary_statistics
 
 
@@ -835,28 +747,24 @@ end function compute_summary_statistics
 !==============================================================================
 
 !------------------------------------------------------------------------------
-! SUBROUTINE convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
+! SUBROUTINE convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
 !
 ! Convert from TensorFlow formulation and notation to the Jones and Pewsey
 ! formulation and notation.
 !
 ! Arguments
 ! ---------
-! mu : real scalar
+! loc : real scalar
 !   The location parameter.
-!   TensorFlow calls this "loc".
 !
-! sigma : real scalar
-!   The scale parameter. Must be strictly positive.
-!   TensorFlow calls this "scale".
+! sigma : real scalar, sigma > 0
+!   The scale parameter.
 !
-! nu : real scalar
+! skewness : real scalar
 !   The skewness parameter.
-!   TensorFlow calls this "skewness".
 !
-! tau : real scalar
-!   The tail-weight parameter. Must be strictly positive.
-!   TensorFlow calls this "tailweight".
+! tailweight : real scalar, tailweight > 0
+!   The tail-weight parameter.
 !
 ! Notes
 ! -----
@@ -864,22 +772,23 @@ end function compute_summary_statistics
 !   formulas given in Jones and Pewsey [1] directly as published.
 !
 ! * We could have converted the formulas to the tfp notation, but such a
-!   reformulation does not save significant computational time while severly
+!   reformulation does not save significant computational time while severely
 !   sacrificing clarity.
+!
 !------------------------------------------------------------------------------
-elemental subroutine convert_tf_to_jp(mu, sigma, nu, tau, xi, eta, eps, delta)
-    real(8), intent(in) :: mu, sigma, nu, tau
+elemental subroutine convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
+    real(8), intent(in) :: loc, sigma, skewness, tailweight
     real(8), intent(out) :: xi, eta, eps, delta
 
-    xi    = mu
-    eta   = sigma * 2.0 / sinh(asinh(2.0) * tau)
-    eps   = nu
-    delta = 1.0 / tau
+    xi    = loc
+    eta   = sigma * 2.0 / sinh(asinh(2.0) * tailweight)
+    eps   = skewness
+    delta = 1.0 / tailweight
 end subroutine
 
 
 !------------------------------------------------------------------------------
-! FUNCTION gaussian_cdf_inv(pr))
+! function gaussian_cdf_inv(pr))
 !
 ! Compute the approximate inverse cdf for a standard normal distribution.
 !
@@ -895,8 +804,6 @@ end subroutine
 !
 ! Notes
 ! -----
-! * This is merely a helper function.
-!
 ! * This implements Abramowitz and Stegun (1965) Equation (26.2.23).
 !
 ! * This is an approximation. The error is bounded by |error| < 4.5e-4.
@@ -905,6 +812,7 @@ end subroutine
 !
 ! * This FORTRAN code was inspired by John D. Cook's writeup found at:
 !   https://www.johndcook.com/blog/normal_cdf_inverse/.
+!
 !------------------------------------------------------------------------------
 elemental function gaussian_cdf_inv(pr) result(cdf_inv)
     real(8) :: cdf_inv
@@ -923,7 +831,7 @@ end function gaussian_cdf_inv
 
 
 !------------------------------------------------------------------------------
-! FUNCTION rational_approximation(t)
+! function rational_approximation(t)
 !
 ! Compute an approximate inverse cdf for a standard normal distribution using
 ! the approximation given by Abramowitz and Stegun (1965) Equation (26.2.23).
@@ -939,8 +847,6 @@ end function gaussian_cdf_inv
 !
 ! Notes
 ! -----
-! * This is merely a helper function, for a helper function.
-!
 ! * The rational approximation is computed using Horner's rule.
 !
 ! * This FORTRAN code was inspired by John D. Cook's writeup found at:
@@ -951,20 +857,21 @@ end function gaussian_cdf_inv
 ! Abramowitz, M. & Stegun, I. A., Handbook of Mathematical Functions:
 ! with Formulas, Graphs, and Mathematical Tables, Dover Publications, 1965.
 ! ISBN: 978-0486612720.
+!
 !------------------------------------------------------------------------------
 elemental function rational_approximation(t)
     real(8) :: rational_approximation
     real(8), intent(in) :: t
 
-    real(8), parameter :: c(3) = (/ 2.515517, 0.802853, 0.010328 /)
-    real(8), parameter :: d(3) = (/ 1.432788, 0.189269, 0.001308 /)
+    real(8), parameter :: c(3) = [2.515517, 0.802853, 0.010328]
+    real(8), parameter :: d(3) = [1.432788, 0.189269, 0.001308]
 
     rational_approximation = t - ((c(3)*t + c(2))*t + c(1)) / (((d(3)*t + d(2))*t + d(1))*t + 1.0)
 end function rational_approximation
 
 
 !------------------------------------------------------------------------------
-! FUNCTION jones_pewsey_p(q)
+! function jones_pewsey_p(q)
 !
 ! Compute the Jones and Pewsey factor Pq as defined on page 764 of Jones and
 ! Pewsey (2009).
@@ -1008,7 +915,7 @@ end function jones_pewsey_p
 
 
 !------------------------------------------------------------------------------
-! FUNCTION Kv(v)
+! function Kv(v)
 !
 ! Compute the modified Bessel function of the second kind at (1/4):
 ! $K_{v}(1/4)$.
@@ -1053,7 +960,7 @@ elemental function Kv(v) result(besselk)
     real(8), intent(in) :: v
 
     real(8), parameter :: TOLERANCE = 1e-4
-    real(8) :: nu, besselk_minus1, besselk_plus1
+    real(8) :: skewness, besselk_minus1, besselk_plus1
     integer :: j
 
     if (abs(v - nint(v)) > TOLERANCE) then
@@ -1063,15 +970,15 @@ elemental function Kv(v) result(besselk)
     elseif (abs(v - 1.0) < TOLERANCE) then
         besselk = 3.747025974440712 + 6.166027005560792 * (v-1.0)
     else
-        nu = 1.0 + v - nint(v)
+        skewness = 1.0 + v - nint(v)
 
         besselk_minus1 = 1.541506751248303 + 1.491844425771660 * (v - nint(v))**2
         besselk        = 3.747025974440712 + 6.166027005560792 * (v - nint(v))
 
         do j = 1, (nint(v) - 1)
-            besselk_plus1 = besselk_minus1 + 8.0*nu*besselk
+            besselk_plus1 = besselk_minus1 + 8.0*skewness*besselk
 
-            nu = nu + 1.0
+            skewness = skewness + 1.0
             besselk_minus1 = besselk
             besselk = besselk_plus1
         end do
@@ -1080,7 +987,7 @@ end function Kv
 
 
 !------------------------------------------------------------------------------
-! FUNCTION Iv(v)
+! function Iv(v)
 !
 ! Compute the modified Bessel function of the first kind at (1/4):
 ! $I_{v}(1/4)$.

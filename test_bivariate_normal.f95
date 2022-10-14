@@ -1,5 +1,5 @@
 !==============================================================================
-! test_bivariate_normal_bivariate_normal.f95                                          (12.10.22)
+! test_bivariate_normal_bivariate_normal.f95
 !
 ! Test the FORTRAN-based bivariate normal distribution utility functions.
 !
@@ -65,6 +65,7 @@ subroutine test_bivariate_normal_pdf_scalar()
 
     computed = pdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
     truth    = 0.0172512689915052
+
     write(*,*) 'test_bivariate_normal_pdf_scalar:           max_abs_error = ', abs(computed-truth)
 end subroutine test_bivariate_normal_pdf_scalar
 
@@ -88,6 +89,7 @@ subroutine test_bivariate_normal_pdf_elemental()
 
     computed = pdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
     truth    = [0.002641689, 0.002237701, 0.000023018, 0.009171173]
+
     write(*,*) 'test_bivariate_normal_pdf_elemental:        max_abs_error = ', maxval(abs(computed-truth))
 end subroutine test_bivariate_normal_pdf_elemental
 
@@ -111,6 +113,7 @@ subroutine test_bivariate_normal_pdf_uv_array()
 
     computed = pdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
     truth    = [0.002641689, 0.001442926, 0.001662721, 0.001442926]
+
     write(*,*) 'test_bivariate_normal_pdf_uv_array:         max_abs_error = ', maxval(abs(computed-truth))
 end subroutine test_bivariate_normal_pdf_uv_array
 
@@ -133,6 +136,7 @@ subroutine test_bivariate_normal_cdf_scalar()
 
     computed = cdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
     truth    = 0.436773866877541
+
     write(*,*) 'test_bivariate_normal_cdf_scalar:           max_abs_error = ', abs(computed-truth)
 end subroutine test_bivariate_normal_cdf_scalar
 
@@ -156,6 +160,7 @@ subroutine test_bivariate_normal_cdf_elemental()
 
     computed = cdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
     truth    = [0.121805190516559, 0.89270174122853, 0.998958698546541, 0.175450574637629]
+
     write(*,*) 'test_bivariate_normal_cdf_elemental:        max_abs_error = ', maxval(abs(computed-truth))
 end subroutine test_bivariate_normal_cdf_elemental
 
@@ -179,7 +184,6 @@ subroutine test_bivariate_normal_cdf_uv_array()
 
     computed = cdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
     truth    = [0.121805190516559, 0.520318147269926, 0.447250185167959, 0.520318147269926]
+
     write(*,*) 'test_bivariate_normal_cdf_uv_array:         max_abs_error = ', maxval(abs(computed-truth))
 end subroutine test_bivariate_normal_cdf_uv_array
-
-
