@@ -1,11 +1,13 @@
 !==============================================================================
-! test_shash_shash.f95                                                     (12.10.22)
+! test_shash.f95                                                     (14.10.22)
 !
-! Test the FORTRAN-based sinh-arcsinh normal distribution utility functions.
+! Test the FORTRAN-based sinh-arcsinh normal (SHASH) distribution utility
+! functions.
 !
 ! Notes
 ! -----
-! * The pdf and cdf "truth" values were computed using TensorFlow [1].
+! * The pdf and cdf "truth" values were computed using TensorFlow [1]. The
+!   other "truth" values were computed using the python implementation.
 !
 ! * This code was tested using:
 !   GNU Fortran (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders) 12.2.0
@@ -31,6 +33,10 @@
 ! Cooperative Institute for Research in the Atmosphere
 ! Colorado State University
 ! Fort Collins, CO, 80523
+!
+! Version
+! -------
+! * 14 October 2022
 !
 !==============================================================================
 SUBROUTINE test_shash()
@@ -90,14 +96,14 @@ SUBROUTINE test_shash_pdf_elemental()
     REAL(8), DIMENSION(4) :: x, mu, sigma, nu, tau
     REAL(8), DIMENSION( SIZE(x) ) :: computed, truth
 
-    x     = (/ 0.5, 1.0, 1.5, 2.0 /)
-    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
-    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+    x     = [0.5, 1.0, 1.5, 2.0]
+    mu    = [0.0, 0.5, 1.0, 1.5]
+    sigma = [0.5, 1.0, 1.5, 2.0]
+    nu    = [0.0, 0.5, 1.0, 1.5]
+    tau   = [1.0, 1.0, 0.8, 1.5]
 
     computed = pdf(x, mu, sigma, nu, tau)
-    truth    = (/ 0.48394145, 0.35682481, 0.21718473, 0.1577138 /)
+    truth    = [0.48394145, 0.35682481, 0.21718473, 0.1577138]
     WRITE(*,*) 'test_shash_pdf_elemental:        max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_pdf_elemental
 
@@ -110,14 +116,14 @@ SUBROUTINE test_shash_pdf_x_array()
     REAL(8) :: x(4), mu, sigma, nu, tau
     REAL(8), DIMENSION( SIZE(x) ) :: computed, truth
 
-    x     = (/ 1.5, 2.5, 3.5, 4.5 /)
+    x     = [1.5, 2.5, 3.5, 4.5]
     mu    = 1.5
     sigma = 2.0
     nu    = 1.5
     tau   = 1.5
 
     computed = pdf(x, mu, sigma, nu, tau)
-    truth    = (/ 0.069731, 0.16752543, 0.11880247, 0.08460783 /)
+    truth    = [0.069731, 0.16752543, 0.11880247, 0.08460783]
     WRITE(*,*) 'test_shash_pdf_x_array:          max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_pdf_x_array
 
@@ -150,14 +156,14 @@ SUBROUTINE test_shash_cdf_elemental()
     REAL(8), DIMENSION(4) :: x, mu, sigma, nu, tau
     REAL(8), DIMENSION( SIZE(x) ) :: computed, truth
 
-    x     = (/ 0.5, 1.0, 1.5, 2.0 /)
-    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
-    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+    x     = [0.5, 1.0, 1.5, 2.0]
+    mu    = [0.0, 0.5, 1.0, 1.5]
+    sigma = [0.5, 1.0, 1.5, 2.0]
+    nu    = [0.0, 0.5, 1.0, 1.5]
+    tau   = [1.0, 1.0, 0.8, 1.5]
 
     computed = cdf(x, mu, sigma, nu, tau)
-    truth    = (/ 0.84134475, 0.4925046, 0.22218556, 0.07596765 /)
+    truth    = [0.84134475, 0.4925046, 0.22218556, 0.07596765]
     WRITE(*,*) 'test_shash_cdf_elemental:        max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_cdf_elemental
 
@@ -170,14 +176,14 @@ SUBROUTINE test_shash_cdf_x_array()
     REAL(8), DIMENSION(4) :: x, mu, sigma, nu, tau
     REAL(8), DIMENSION( SIZE(x) ) :: computed, truth
 
-    x     = (/ 1.5, 2.5, 3.5, 4.5 /)
+    x     = [1.5, 2.5, 3.5, 4.5]
     mu    = 1.5
     sigma = 2.0
     nu    = 1.5
     tau   = 1.5
 
     computed = cdf(x, mu, sigma, nu, tau)
-    truth    = (/ 0.01661558, 0.1599833, 0.3035546, 0.4036644 /)
+    truth    = [0.01661558, 0.1599833, 0.3035546, 0.4036644]
     WRITE(*,*) 'test_shash_cdf_x_array:          max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_cdf_x_array
 
@@ -190,14 +196,14 @@ SUBROUTINE test_shash_quantile()
     REAL(8), DIMENSION(4) :: pr, mu, sigma, nu, tau
     REAL(8), DIMENSION( SIZE(pr) ) :: computed, truth
 
-    pr    = (/ 0.1, 0.3, 0.6, 0.8 /)
-    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
-    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+    pr    = [0.1, 0.3, 0.6, 0.8]
+    mu    = [0.0, 0.5, 1.0, 1.5]
+    sigma = [0.5, 1.0, 1.5, 2.0]
+    nu    = [0.0, 0.5, 1.0, 1.5]
+    tau   = [1.0, 1.0, 0.8, 1.5]
 
     computed = quantile(pr, mu, sigma, nu, tau)
-    truth    = (/ -0.64077578, 0.49707086, 3.46847072, 15.376874 /)
+    truth    = [-0.64077578, 0.49707086, 3.46847072, 15.376874]
     WRITE(*,*) 'test_shash_quantile (x):         max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_quantile
 
@@ -235,13 +241,13 @@ SUBROUTINE test_shash_median()
     REAL(8), DIMENSION(4) :: mu, sigma, nu, tau
     REAL(8), DIMENSION( SIZE(mu) ) :: computed, truth
 
-    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
-    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+    mu    = [0.0, 0.5, 1.0, 1.5]
+    sigma = [0.5, 1.0, 1.5, 2.0]
+    nu    = [0.0, 0.5, 1.0, 1.5]
+    tau   = [1.0, 1.0, 0.8, 1.5]
 
     computed = median(mu, sigma, nu, tau)
-    truth    = (/ 0.0, 1.0210953, 2.8640418, 5.8619227 /)
+    truth    = [0.0, 1.0210953, 2.8640418, 5.8619227]
     WRITE(*,*) 'test_shash_median (x):           max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_median
 
@@ -278,13 +284,13 @@ SUBROUTINE test_shash_mean()
     REAL(8), DIMENSION(4) :: mu, sigma, nu, tau
     REAL(8), DIMENSION( SIZE(mu) ) :: computed, truth
 
-    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
-    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+    mu    = [0.0, 0.5, 1.0, 1.5]
+    sigma = [0.5, 1.0, 1.5, 2.0]
+    nu    = [0.0, 0.5, 1.0, 1.5]
+    tau   = [1.0, 1.0, 0.8, 1.5]
 
     computed = mean(mu, sigma, nu, tau)
-    truth    = (/ 0.0, 1.2058396, 3.2700596, 9.874768 /)
+    truth    = [0.0, 1.2058396, 3.2700596, 9.874768]
     WRITE(*,*) 'test_shash_mean:                 max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_mean
 
@@ -297,13 +303,13 @@ SUBROUTINE test_shash_mode()
     REAL(8), DIMENSION(4) :: mu, sigma, nu, tau
     REAL(8), DIMENSION( SIZE(mu) ) :: computed, truth
 
-    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
-    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+    mu    = [0.0, 0.5, 1.0, 1.5]
+    sigma = [0.5, 1.0, 1.5, 2.0]
+    nu    = [0.0, 0.5, 1.0, 1.5]
+    tau   = [1.0, 1.0, 0.8, 1.5]
 
     computed = mode(mu, sigma, nu, tau)
-    truth    = (/ 0.0, 0.5764171, 1.6523985, 2.304149 /)
+    truth    = [0.0, 0.5764171, 1.6523985, 2.304149]
     WRITE(*,*) 'test_shash_mode:                 max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_mode
 
@@ -316,13 +322,13 @@ SUBROUTINE test_shash_variance()
     REAL(8), DIMENSION(4) :: mu, sigma, nu, tau
     REAL(8), DIMENSION( SIZE(mu) ) :: computed, truth
 
-    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
-    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+    mu    = [0.0, 0.5, 1.0, 1.5]
+    sigma = [0.5, 1.0, 1.5, 2.0]
+    nu    = [0.0, 0.5, 1.0, 1.5]
+    tau   = [1.0, 1.0, 0.8, 1.5]
 
     computed = variance(mu, sigma, nu, tau)
-    truth    = (/ 0.25, 1.3164116, 4.4789896, 105.18572 /)
+    truth    = [0.25, 1.3164116, 4.4789896, 105.18572]
     WRITE(*,*) 'test_shash_variance:             max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_variance
 
@@ -335,13 +341,13 @@ SUBROUTINE test_shash_stddev()
     REAL(8), DIMENSION(4) :: mu, sigma, nu, tau
     REAL(8), DIMENSION( SIZE(mu) ) :: computed, truth
 
-    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
-    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+    mu    = [0.0, 0.5, 1.0, 1.5]
+    sigma = [0.5, 1.0, 1.5, 2.0]
+    nu    = [0.0, 0.5, 1.0, 1.5]
+    tau   = [1.0, 1.0, 0.8, 1.5]
 
     computed = stddev(mu, sigma, nu, tau)
-    truth    = (/ 0.5, 1.1473497, 2.1163623, 10.256009 /)
+    truth    = [0.5, 1.1473497, 2.1163623, 10.256009]
     WRITE(*,*) 'test_shash_stddev:               max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_stddev
 
@@ -354,13 +360,13 @@ SUBROUTINE test_shash_skew()
     REAL(8), DIMENSION(4) :: mu, sigma, nu, tau
     REAL(8), DIMENSION( SIZE(mu) ) :: computed, truth
 
-    mu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    sigma = (/ 0.5, 1.0, 1.5, 2.0 /)
-    nu    = (/ 0.0, 0.5, 1.0, 1.5 /)
-    tau   = (/ 1.0, 1.0, 0.8, 1.5 /)
+    mu    = [0.0, 0.5, 1.0, 1.5]
+    sigma = [0.5, 1.0, 1.5, 2.0]
+    nu    = [0.0, 0.5, 1.0, 1.5]
+    tau   = [1.0, 1.0, 0.8, 1.5]
 
     computed = skew(mu, sigma, nu, tau)
-    truth    = (/ 0.0, 0.7544219, 0.7953873, 2.29442 /)
+    truth    = [0.0, 0.7544219, 0.7953873, 2.29442]
     WRITE(*,*) 'test_shash_skew:                 max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_shash_skew
 
@@ -370,20 +376,13 @@ SUBROUTINE test_shash_summary_statistics()
     USE shash_module
     IMPLICIT NONE
 
-    REAL(8) :: mu, sigma, nu, tau
-    TYPE (SUMMARY_STATISTICS) :: computed, truth
+    REAL(8), DIMENSION(4) :: mu, sigma, nu, tau
+    TYPE (SUMMARY_STATISTICS), DIMENSION(4) :: computed, truth
 
-    mu    = 1.5
-    sigma = 2.0
-    nu    = 1.5
-    tau   = 1.5
-
-    computed = compute_summary_statistics(mu, sigma, nu, tau)
-    truth = SUMMARY_STATISTICS ( &
-        9.7736439220844833, 9.8747668656411314, 5.8619225974669984, &
-        2.3041489830951853, 2.1470212037212448, 3.0838357058423180, &
-        12.857479627926802, 23.353488414505147, 2.2944202715734878, &
-        10.256009741701654, 105.18573582187922 )
+    mu    = [0.0, 0.5, 1.0, 1.5]
+    sigma = [0.5, 1.0, 1.5, 2.0]
+    nu    = [0.0, 0.5, 1.0, 1.5]
+    tau   = [1.0, 1.0, 0.8, 1.5]
 
     WRITE(*,*) 'test_shash_summary_statistics'
 END SUBROUTINE test_shash_summary_statistics

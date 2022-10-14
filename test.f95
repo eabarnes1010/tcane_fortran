@@ -1,5 +1,5 @@
 !==============================================================================
-! test.f95                                                     (12.10.22)
+! test.f95
 !
 ! Test the FORTRAN-based distribution utility functions.
 !
@@ -24,6 +24,10 @@
 ! Cooperative Institute for Research in the Atmosphere
 ! Colorado State University
 ! Fort Collins, CO, 80523
+!
+! Version
+! -------
+! * 14 October 2022
 !
 !==============================================================================
 PROGRAM main

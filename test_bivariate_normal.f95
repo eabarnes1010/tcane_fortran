@@ -27,6 +27,10 @@
 ! Colorado State University
 ! Fort Collins, CO, 80523
 !
+! Version
+! -------
+! * 14 October 2022
+!
 !==============================================================================
 SUBROUTINE test_bivariate_normal()
     WRITE(*,*) '====================='
@@ -74,16 +78,16 @@ SUBROUTINE test_bivariate_normal_pdf_elemental()
     REAL(8), DIMENSION(4) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
     REAL(8), DIMENSION( SIZE(u) ) :: computed, truth
 
-    u       = (/ 8.0, 9.0, 2.0, 9.0 /)
-    v       = (/ 4.0, 9.0, 8.0, 9.0 /)
-    mu_u    = (/ 4.0, 4.0, 7.0, 8.0 /)
-    mu_v    = (/ 2.0, 5.0, 5.0, 6.0 /)
-    sigma_u = (/ 9.0, 4.0, 6.0, 3.0 /)
-    sigma_v = (/ 6.0, 2.0, 2.0, 5.0 /)
-    rho     = (/ 0.2, 0.3, 0.8, 0.3 /)
+    u       = [8.0, 9.0, 2.0, 9.0]
+    v       = [4.0, 9.0, 8.0, 9.0]
+    mu_u    = [4.0, 4.0, 7.0, 8.0]
+    mu_v    = [2.0, 5.0, 5.0, 6.0]
+    sigma_u = [9.0, 4.0, 6.0, 3.0]
+    sigma_v = [6.0, 2.0, 2.0, 5.0]
+    rho     = [0.2, 0.3, 0.8, 0.3]
 
     computed = pdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
-    truth    = (/ 0.002641689, 0.002237701, 0.000023018, 0.009171173 /)
+    truth    = [0.002641689, 0.002237701, 0.000023018, 0.009171173]
     WRITE(*,*) 'test_bivariate_normal_pdf_elemental:        max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_bivariate_normal_pdf_elemental
 
@@ -97,8 +101,8 @@ SUBROUTINE test_bivariate_normal_pdf_uv_array()
     REAL(8) :: mu_u, mu_v, sigma_u, sigma_v, rho
     REAL(8), DIMENSION( SIZE(u) ) :: computed, truth
 
-    u       = (/ 8.0, 9.0, 2.0, 9.0 /)
-    v       = (/ 4.0, 9.0, 8.0, 9.0 /)
+    u       = [8.0, 9.0, 2.0, 9.0]
+    v       = [4.0, 9.0, 8.0, 9.0]
     mu_u    = 4.0
     mu_v    = 2.0
     sigma_u = 9.0
@@ -106,7 +110,7 @@ SUBROUTINE test_bivariate_normal_pdf_uv_array()
     rho     = 0.2
 
     computed = pdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
-    truth    = (/ 0.002641689, 0.001442926, 0.001662721, 0.001442926 /)
+    truth    = [0.002641689, 0.001442926, 0.001662721, 0.001442926]
     WRITE(*,*) 'test_bivariate_normal_pdf_uv_array:         max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_bivariate_normal_pdf_uv_array
 
@@ -142,16 +146,16 @@ SUBROUTINE test_bivariate_normal_cdf_elemental()
     REAL(8), DIMENSION(4) :: u, v, mu_u, mu_v, sigma_u, sigma_v, rho
     REAL(8), DIMENSION( SIZE(u) ) :: computed, truth
 
-    u       = (/ 8.0, 9.0, 2.0, 9.0 /)
-    v       = (/ 4.0, 9.0, 8.0, 9.0 /)
-    mu_u    = (/ 4.0, 4.0, 7.0, 8.0 /)
-    mu_v    = (/ 2.0, 5.0, 5.0, 6.0 /)
-    sigma_u = (/ 9.0, 4.0, 6.0, 3.0 /)
-    sigma_v = (/ 6.0, 2.0, 2.0, 5.0 /)
-    rho     = (/ 0.2, 0.3, 0.8, 0.3 /)
+    u       = [8.0, 9.0, 2.0, 9.0]
+    v       = [4.0, 9.0, 8.0, 9.0]
+    mu_u    = [4.0, 4.0, 7.0, 8.0]
+    mu_v    = [2.0, 5.0, 5.0, 6.0]
+    sigma_u = [9.0, 4.0, 6.0, 3.0]
+    sigma_v = [6.0, 2.0, 2.0, 5.0]
+    rho     = [0.2, 0.3, 0.8, 0.3]
 
     computed = cdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
-    truth    = (/ 0.121805190516559, 0.89270174122853, 0.998958698546541, 0.175450574637629 /)
+    truth    = [0.121805190516559, 0.89270174122853, 0.998958698546541, 0.175450574637629]
     WRITE(*,*) 'test_bivariate_normal_cdf_elemental:        max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_bivariate_normal_cdf_elemental
 
@@ -165,8 +169,8 @@ SUBROUTINE test_bivariate_normal_cdf_uv_array()
     REAL(8) :: mu_u, mu_v, sigma_u, sigma_v, rho
     REAL(8), DIMENSION( SIZE(u) ) :: computed, truth
 
-    u       = (/ 8.0, 9.0, 2.0, 9.0 /)
-    v       = (/ 4.0, 9.0, 8.0, 9.0 /)
+    u       = [8.0, 9.0, 2.0, 9.0]
+    v       = [4.0, 9.0, 8.0, 9.0]
     mu_u    = 4.0
     mu_v    = 2.0
     sigma_u = 9.0
@@ -174,7 +178,7 @@ SUBROUTINE test_bivariate_normal_cdf_uv_array()
     rho     = 0.2
 
     computed = cdf(u, v, mu_u, mu_v, sigma_u, sigma_v, rho)
-    truth    = (/ 0.121805190516559, 0.520318147269926, 0.447250185167959, 0.520318147269926 /)
+    truth    = [0.121805190516559, 0.520318147269926, 0.447250185167959, 0.520318147269926]
     WRITE(*,*) 'test_bivariate_normal_cdf_uv_array:         max_abs_error = ', MAXVAL(ABS(computed-truth))
 END SUBROUTINE test_bivariate_normal_cdf_uv_array
 

@@ -1,5 +1,5 @@
 !==============================================================================
-! shash.f95                                                          (10.10.22)
+! shash.f95
 !
 ! FORTRAN-based sinh-arcsinh normal (SHASH) distribution utility functions.
 !
@@ -23,13 +23,18 @@
 !   * pr, mu, sigma, nu, and tau may be scalars.
 !   * pr, mu, sigma, nu, and tau may be commensurate arrays.
 !
+! median(mu, sigma, nu, tau)
+!   Compute the distribution median.
+!   * mu, sigma, nu, and tau may be scalars.
+!   * mu, sigma, nu, and tau may be commensurate arrays.
+!
 ! mean(mu, sigma, nu, tau)
 !   Compute the distribution mean.
 !   * mu, sigma, nu, and tau may be scalars.
 !   * mu, sigma, nu, and tau may be commensurate arrays.
 !
-! median(mu, sigma, nu, tau)
-!   Compute the distribution median.
+! mode(mu, sigma, nu, tau)
+!   Compute the distribution mode.
 !   * mu, sigma, nu, and tau may be scalars.
 !   * mu, sigma, nu, and tau may be commensurate arrays.
 !
@@ -48,8 +53,11 @@
 !   * mu, sigma, nu, and tau may be scalars.
 !   * mu, sigma, nu, and tau may be commensurate arrays.
 !
-! compute_summary_statistics
-
+! compute_summary_statistics(mu, sigma, nu, tau)
+!   Compute a suite of summary statistics.
+!   * mu, sigma, nu, and tau may be scalars.
+!   * mu, sigma, nu, and tau may be commensurate arrays.
+!
 ! Notes
 ! -----
 ! * The sinh-arcsinh normal distribution was defined in [1]. A more accessible,
@@ -85,6 +93,11 @@
 ! Cooperative Institute for Research in the Atmosphere
 ! Colorado State University
 ! Fort Collins, CO, 80523
+!
+! Version
+! -------
+! * 14 October 2022
+!
 !==============================================================================
 MODULE shash_module
 IMPLICIT NONE
@@ -765,7 +778,7 @@ END FUNCTION skew
 
 
 !------------------------------------------------------------------------------
-! SUBROUTINE compute_summary_statistics(mu, sigma, nu, tau, summary)
+! ELEMENTAL FUNCTION compute_summary_statistics(mu, sigma, nu, tau, summary)
 !
 ! Compute a set of summary statistics for the SHASH distribution
 !
@@ -791,9 +804,12 @@ END FUNCTION skew
 !
 ! Notes
 ! -----
+! * This function is ELEMENTAL, so it may be called with scalar arguments. It
+!   may also be called with array arguments as long as all of the arrays are
+!   commensurate.
 !
 !------------------------------------------------------------------------------
-FUNCTION compute_summary_statistics(mu, sigma, nu, tau) RESULT(summary)
+ELEMENTAL FUNCTION compute_summary_statistics(mu, sigma, nu, tau) RESULT(summary)
     REAL(8), INTENT(IN) :: mu, sigma, nu, tau
     TYPE (SUMMARY_STATISTICS) :: summary
 
@@ -982,12 +998,6 @@ END FUNCTION rational_approximation
 ! [1] M. C. Jones and A. Pewsey. "Sinh-arcsinh distributions", Biometrika 96.4
 ! October 2009, pp. 761–780. DOI: 10.1093/biomet/asp053.
 !
-! [2] N. Temme. "On the numerical evaluation of the modified Bessel function
-! of the third kind", Journal of Computational Physics, 1975, 19, 324-337.
-! DOI: 10.1016/0021-9991(75)90082-0.
-!
-! [3] S. Zhang and J. Jin. Computation of Special Functions. John Wiley and
-! Sons, Inc., 1996. ISBN 978-0471119630.
 !------------------------------------------------------------------------------
 ELEMENTAL FUNCTION jones_pewsey_p(q) RESULT(f)
     REAL(8) :: f
@@ -1014,11 +1024,29 @@ END FUNCTION jones_pewsey_p
 !
 ! Notes
 ! -----
+! * For all but near-integer values of v, the computation uses Equation
+!   (6.1.4) of page 203 of [1].
+!
+!       $K_v = \frac{\pi}{2} \frac{I_{-v} - I_{v}}{\sin(v \pi)}$
+!
 ! * The standard relationship between Kv(z) and Iv(z) has computational
 !   singularities at v = 0, 1, 2, ..., due to the sin(v*PI) term in the
-!   denominator. To eliminate  these computational singularities we use
+!   denominator. To eliminate these computational singularities we use
 !   a quadratic approximation around v = 0, a linear approximation around
 !   v = 1, and the standard forward recursion around v = 2, 3, ...
+!
+!       $K_{v-1} + 8v K_{v} = K_{v+1}$
+!
+!   See Equation (61.23) on page 206 of [1], and substitute in z = 1/4.
+!
+! * The quadratic approximation about v=0, and the linear approximation
+!   around v=1, are the truncated Taylor series.
+!
+! References
+! ----------
+! [1] S. Zhang and J. Jin. Computation of Special Functions. John Wiley and
+! Sons, Inc., 1996. ISBN 978-0471119630.
+!
 !------------------------------------------------------------------------------
 ELEMENTAL FUNCTION Kv(v) RESULT(besselk)
     REAL(8) :: besselk
@@ -1068,8 +1096,20 @@ END FUNCTION Kv
 !
 ! Notes
 ! -----
+! * The computation is carried out using
+!
+!       $I_v = \sum_{m=0}^{\infty} \frac{1}{8^{2m+v} m! \Gamma(m+v+1)}
+!
+!   See Equation (6.1.2) on page 202 of [1], and substitute in z = 1/4.
+!
 ! * Using only six terms in the infinite series is sufficient to achieve full
-!   double precision for all cases.
+!   double precision for all necessary cases; i.e. for $-1/2 < v < \infty$.
+!
+! References
+! ----------
+! [1] S. Zhang and J. Jin. Computation of Special Functions. John Wiley and
+! Sons, Inc., 1996. ISBN 978-0471119630.
+!
 !------------------------------------------------------------------------------
 ELEMENTAL FUNCTION Iv(v) RESULT(f)
     REAL(8) :: f

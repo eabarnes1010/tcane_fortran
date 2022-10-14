@@ -52,6 +52,11 @@
 ! Cooperative Institute for Research in the Atmosphere
 ! Colorado State University
 ! Fort Collins, CO, 80523
+!
+! Version
+! -------
+! * 14 October 2022
+!
 !==============================================================================
 MODULE bivariate_normal_module
 IMPLICIT NONE
