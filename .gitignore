@@ -17,6 +17,7 @@ saved_predictions/
 model_metrics/
 documents/
 archive/
+matlab/
 
 # Apple stuff
 .DS_Store
