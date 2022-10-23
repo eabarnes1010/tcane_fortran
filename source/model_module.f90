@@ -23,7 +23,7 @@
 !
 ! Version
 ! -------
-! * 21 October 2022
+! * 24 October 2022
 !
 !==============================================================================
 module model_module
@@ -51,8 +51,8 @@ module model_module
       integer :: n_hidden
       integer :: n_output
 
-      character(len=12),   dimension(:), allocatable :: input_names
-      character(len=12),   dimension(:), allocatable :: output_names
+      character(len=16),   dimension(:), allocatable :: input_names
+      character(len=16),   dimension(:), allocatable :: output_names
 
       type(InputLayer)                               :: input_layer
       type(HiddenLayer),   dimension(:), allocatable :: hidden_layers
@@ -96,7 +96,7 @@ contains
 
       if (allocated(this%hidden_layers)) deallocate(this%hidden_layers)
       allocate(this%hidden_layers(this%n_hidden), stat=alloc_stat)
-      if (alloc_stat /= 0) stop "allocation failed"
+      if (alloc_stat /= 0) stop "allocation error in <in <initialize_Model #1>"
 
       do i = 1, this%n_hidden
          call initialize( &
@@ -109,7 +109,7 @@ contains
 
       if (allocated(this%output_channels)) deallocate(this%output_channels)
       allocate(this%output_channels(this%n_output), stat=alloc_stat)
-      if (alloc_stat /= 0) stop "allocation failed"
+      if (alloc_stat /= 0) stop "allocation error in <in <initialize_Model #2>"
 
       do i = 1, this%n_output
          call initialize( &
@@ -135,7 +135,7 @@ contains
       real(8), dimension(:), allocatable :: throughput
       allocate(throughput(0))
 
-      if (size(input) /= this%n_input) stop "incorrect input array size"
+      if (size(input) /= this%n_input) stop "incorrect input array size in <employ_Model>"
 
       throughput = employ(this%input_layer, input)
 
@@ -146,7 +146,6 @@ contains
       do i = 1, this%n_output
          output(i) = employ(this%output_channels(i), throughput)
       end do
-
    end function employ_Model
 
 end module model_module

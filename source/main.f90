@@ -1,13 +1,12 @@
 program main
-   use blueprint_module
+   use test_bivariate_normal_module
+   use test_model_module
+   use test_shash_module
 
-   type(Blueprint) :: details
-
-   details = read_blueprint("D:\Google Drive\Research\Forward ANN\data\test_blueprint.json")
-
-   print *, details%n_input
-   print *, details%output_names
-   print *, details%input_traits%std
-   print *, details%hidden_traits(1)%activation
-   print *, details%output_traits(3)%transformation
+   write(*,*)
+   call test_shash()
+   write(*,*)
+   call test_bivariate_normal()
+   write(*,*)
+   call test_model()
 end program main

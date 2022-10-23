@@ -23,7 +23,7 @@
 !
 ! Version
 ! -------
-! * 22 October 2022
+! * 24 October 2022
 !
 !==============================================================================
 module output_channel_module
@@ -84,7 +84,7 @@ contains
 
       if (allocated(this%weights)) deallocate(this%weights)
       allocate(this%weights, source=weights, stat=alloc_stat)
-      if (alloc_stat /= 0) stop "allocation failed"
+      if (alloc_stat /= 0) stop "allocation error in <in <initialize_OutputChannel>"
 
       this%bias           = bias
       this%transformation = transformation
@@ -102,7 +102,7 @@ contains
 
       real(8) :: throughput
 
-      if (size(input) /= this%n_input)  stop "incorrect input array size"
+      if (size(input) /= this%n_input)  stop "incorrect input array size in <employ_OutputChannel>"
 
       throughput = dot_product(this%weights, input) + this%bias
       throughput = apply_transformation(this%transformation, throughput)
