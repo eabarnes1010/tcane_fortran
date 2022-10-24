@@ -99,7 +99,7 @@ contains
       integer :: alloc_stat, io_stat, i
 
       allocate(output(nrows), stat=alloc_stat)
-      if (alloc_stat /= 0) stop 'allocation error in <read_list>'
+      if (alloc_stat /= 0) stop "allocation error in <in <read_list>"
 
       call skip_line(eunit)
       do i = 1, nrows
@@ -128,7 +128,7 @@ contains
       integer :: i, j
 
       allocate(output(nrows, ncols), stat=alloc_stat)
-      if (alloc_stat /= 0) stop 'allocation error in <read_matrix>'
+      if (alloc_stat /= 0) stop "allocation error in <in <read_matrix>"
 
       call skip_line(eunit)
       do i = 1, nrows
