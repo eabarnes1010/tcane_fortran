@@ -5,6 +5,12 @@
 ! includes all activation functions in "Module:tf.keras.activations" of
 ! Tensorflow 2.10.
 !
+! Public procedures
+! -----------------
+! apply_activation : apply to the input yielding the output.
+!
+! is_valid_activation : check if the activation is available.
+!
 ! Authors
 ! -------
 ! Dr. Randal J. Barnes
@@ -40,6 +46,24 @@ module activation_module
 contains
 
    !-----------------------------------
+   ! FUNCTION: apply_activation
+   !
+   ! Apply the designated activation.
+   !
+   ! Arguments
+   ! ---------
+   ! activation : string
+   !   activation name
+   !
+   ! input : real scalar
+   !   value to be rectified
+   !
+   ! Returns
+   ! -------
+   ! output : real scalar
+   !   value of the rectified input
+   !
+   !---------------------------------------------------------------------------
    function apply_activation(activation, input) result(output)
       character(len=12),              intent(in) :: activation
       real(8),          dimension(:), intent(in) :: input
@@ -104,17 +128,33 @@ contains
             output =  tanh(input)
 
          case default
-            stop "activation type not implemented."
+            print *, activation
+            error stop "activation type not implemented."
 
       end select
    end function apply_activation
 
    !-----------------------------------
+   ! FUNCTION: is_valid_activation
+   !
+   ! Checks that the named activation is available (valid).
+   !
+   ! Arguments
+   ! ---------
+   ! activation : string
+   !   activation name
+   !
+   ! Returns
+   ! -------
+   ! is_valid : logical
+   !   equals .true. if the activation is available, otherwise .false.
+   !
+   !---------------------------------------------------------------------------
    function is_valid_activation(activation) result(is_valid)
       character(len=12), intent(in) :: activation
       logical                       :: is_valid
 
-      is_valid = .TRUE.
+      is_valid = .true.
 
       select case(activation)
          case ("ELU")
@@ -132,7 +172,7 @@ contains
          case ("TANH")
 
          case default
-            is_valid = .FALSE.
+            is_valid = .false.
       end select
    end function is_valid_activation
 

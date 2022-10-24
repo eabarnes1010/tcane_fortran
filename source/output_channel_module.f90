@@ -1,8 +1,8 @@
 !==============================================================================
 ! MODULE: output_channel_module
 !
-! Define the output channel with weights, bias, activation, transformation,
-! and scaling.
+! Define and deploy the output channels with weights, bias, activation,
+! transformation, and scaling.
 !
 ! Authors
 ! -------
@@ -23,7 +23,7 @@
 !
 ! Version
 ! -------
-! * 24 October 2022
+! * 25 October 2022
 !
 !==============================================================================
 module output_channel_module
@@ -80,11 +80,21 @@ contains
 
       integer :: alloc_stat
 
+      if (.not. (is_valid_transformation(transformation))) then
+         print *, transformation
+         error stop "invalid transformation in <initialize_OutputChannel>"
+      end if
+
+      if (std < 0.0_8) then
+         print *, std
+         error stop "invalid std in <initialize_OutputChannel>"
+      end if
+
       this%n_input  = size(weights)
 
       if (allocated(this%weights)) deallocate(this%weights)
       allocate(this%weights, source=weights, stat=alloc_stat)
-      if (alloc_stat /= 0) stop "allocation error in <in <initialize_OutputChannel>"
+      if (alloc_stat /= 0) error stop "allocation error in <in <initialize_OutputChannel>"
 
       this%bias           = bias
       this%transformation = transformation
@@ -102,7 +112,7 @@ contains
 
       real(8) :: throughput
 
-      if (size(input) /= this%n_input)  stop "incorrect input array size in <employ_OutputChannel>"
+      if (size(input) /= this%n_input)  error stop "incorrect input array size in <employ_OutputChannel>"
 
       throughput = dot_product(this%weights, input) + this%bias
       throughput = apply_transformation(this%transformation, throughput)

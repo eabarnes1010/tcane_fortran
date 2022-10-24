@@ -1,7 +1,7 @@
 !==============================================================================
 ! MODULE: test_shash_module
 !
-! Test the FORTRAN-based sinh-arcsinh normal (SHASH) distribution utility
+! Test the Fortran-based sinh-arcsinh normal (SHASH) distribution utility
 ! functions.
 !
 ! Notes
@@ -95,7 +95,7 @@ module test_shash_module
       computed = pdf(x, loc, sigma, skewness, tailweight)
       truth    = 0.08460783
 
-      write(*,*) 'test_shash_pdf_scalar:           max_abs_error = ', abs(computed-truth)
+      write(*,*) 'test_shash_pdf_scalar:                      max_abs_error = ', abs(computed-truth)
    end subroutine test_shash_pdf_scalar
 
    !-----------------------------------
@@ -112,7 +112,7 @@ module test_shash_module
       computed = pdf(x, loc, sigma, skewness, tailweight)
       truth    = [0.48394145, 0.35682481, 0.21718473, 0.1577138]
 
-      write(*,*) 'test_shash_pdf_elemental:        max_abs_error = ', maxval(abs(computed-truth))
+      write(*,*) 'test_shash_pdf_elemental:                   max_abs_error = ', maxval(abs(computed-truth))
    end subroutine test_shash_pdf_elemental
 
    !-----------------------------------
@@ -129,7 +129,7 @@ module test_shash_module
       computed = pdf(x, loc, sigma, skewness, tailweight)
       truth    = [0.069731, 0.16752543, 0.11880247, 0.08460783]
 
-      write(*,*) 'test_shash_pdf_x_array:          max_abs_error = ', maxval(abs(computed-truth))
+      write(*,*) 'test_shash_pdf_x_array:                     max_abs_error = ', maxval(abs(computed-truth))
    end subroutine test_shash_pdf_x_array
 
    !-----------------------------------
@@ -146,7 +146,7 @@ module test_shash_module
       computed = cdf(x, loc, sigma, skewness, tailweight)
       truth    = 0.22218556
 
-      write(*,*) 'test_shash_cdf_scalar:           max_abs_error = ', abs(computed-truth)
+      write(*,*) 'test_shash_cdf_scalar:                      max_abs_error = ', abs(computed-truth)
    end subroutine test_shash_cdf_scalar
 
    !-----------------------------------
@@ -163,7 +163,7 @@ module test_shash_module
       computed = cdf(x, loc, sigma, skewness, tailweight)
       truth    = [0.84134475, 0.4925046, 0.22218556, 0.07596765]
 
-      write(*,*) 'test_shash_cdf_elemental:        max_abs_error = ', maxval(abs(computed-truth))
+      write(*,*) 'test_shash_cdf_elemental:                   max_abs_error = ', maxval(abs(computed-truth))
    end subroutine test_shash_cdf_elemental
 
    !-----------------------------------
@@ -180,7 +180,7 @@ module test_shash_module
       computed = cdf(x, loc, sigma, skewness, tailweight)
       truth    = [0.01661558, 0.1599833, 0.3035546, 0.4036644]
 
-      write(*,*) 'test_shash_cdf_x_array:          max_abs_error = ', maxval(abs(computed-truth))
+      write(*,*) 'test_shash_cdf_x_array:                     max_abs_error = ', maxval(abs(computed-truth))
    end subroutine test_shash_cdf_x_array
 
    !-----------------------------------
@@ -197,7 +197,7 @@ module test_shash_module
       computed = quantile(pr, loc, sigma, skewness, tailweight)
       truth    = [-0.64077578, 0.49707086, 3.46847072, 15.376874]
 
-      write(*,*) 'test_shash_quantile (x):         max_abs_error = ', maxval(abs(computed-truth))
+      write(*,*) 'test_shash_quantile (x):                    max_abs_error = ', maxval(abs(computed-truth))
    end subroutine test_shash_quantile
 
    !-----------------------------------
@@ -219,7 +219,7 @@ module test_shash_module
       computed     = quantile(pr, loc, sigma, skewness, tailweight)
       computed_cdf = cdf(computed, loc, sigma, skewness, tailweight)
 
-      write(*,*) 'test_shash_quantile_random (p):  max_abs_error = ', maxval(abs(computed_cdf-pr))
+      write(*,*) 'test_shash_quantile_random (p):             max_abs_error = ', maxval(abs(computed_cdf-pr))
    end subroutine test_shash_quantile_random
 
    !-----------------------------------
@@ -235,7 +235,7 @@ module test_shash_module
       computed = median(loc, sigma, skewness, tailweight)
       truth    = [0.0, 1.0210953, 2.8640418, 5.8619227]
 
-      write(*,*) 'test_shash_median (x):           max_abs_error = ', maxval(abs(computed-truth))
+      write(*,*) 'test_shash_median (x):                      max_abs_error = ', maxval(abs(computed-truth))
    end subroutine test_shash_median
 
    !-----------------------------------
@@ -256,7 +256,7 @@ module test_shash_module
       computed     = median(loc, sigma, skewness, tailweight)
       computed_cdf = cdf(computed, loc, sigma, skewness, tailweight)
 
-      write(*,*) 'test_shash_median_random (p):    max_abs_error = ', maxval(abs(computed_cdf-0.5))
+      write(*,*) 'test_shash_median_random (p):               max_abs_error = ', maxval(abs(computed_cdf-0.5))
    end subroutine test_shash_median_random
 
    !-----------------------------------
@@ -272,7 +272,7 @@ module test_shash_module
       computed = mean(loc, sigma, skewness, tailweight)
       truth    = [0.0, 1.2058396, 3.2700596, 9.874768]
 
-      write(*,*) 'test_shash_mean:                 max_abs_error = ', maxval(abs(computed-truth))
+      write(*,*) 'test_shash_mean:                            max_abs_error = ', maxval(abs(computed-truth))
    end subroutine test_shash_mean
 
    !-----------------------------------
@@ -288,7 +288,7 @@ module test_shash_module
       computed = mode(loc, sigma, skewness, tailweight)
       truth    = [0.0, 0.5764171, 1.6523985, 2.304149]
 
-      write(*,*) 'test_shash_mode:                 max_abs_error = ', maxval(abs(computed-truth))
+      write(*,*) 'test_shash_mode:                            max_abs_error = ', maxval(abs(computed-truth))
    end subroutine test_shash_mode
 
    !-----------------------------------
@@ -304,7 +304,7 @@ module test_shash_module
       computed = variance(loc, sigma, skewness, tailweight)
       truth    = [0.25, 1.3164116, 4.4789896, 105.18572]
 
-      write(*,*) 'test_shash_variance:             max_abs_error = ', maxval(abs(computed-truth))
+      write(*,*) 'test_shash_variance:                        max_abs_error = ', maxval(abs(computed-truth))
    end subroutine test_shash_variance
 
    !-----------------------------------
@@ -320,7 +320,7 @@ module test_shash_module
       computed = stddev(loc, sigma, skewness, tailweight)
       truth    = [0.5, 1.1473497, 2.1163623, 10.256009]
 
-      write(*,*) 'test_shash_stddev:               max_abs_error = ', maxval(abs(computed-truth))
+      write(*,*) 'test_shash_stddev:                          max_abs_error = ', maxval(abs(computed-truth))
    end subroutine test_shash_stddev
 
    !-----------------------------------
@@ -336,7 +336,7 @@ module test_shash_module
       computed = skew(loc, sigma, skewness, tailweight)
       truth    = [0.0, 0.7544219, 0.7953873, 2.29442]
 
-      write(*,*) 'test_shash_skew:                 max_abs_error = ', maxval(abs(computed-truth))
+      write(*,*) 'test_shash_skew:                            max_abs_error = ', maxval(abs(computed-truth))
    end subroutine test_shash_skew
 
    !-----------------------------------

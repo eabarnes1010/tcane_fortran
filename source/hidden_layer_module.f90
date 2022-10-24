@@ -1,7 +1,8 @@
 !==============================================================================
 ! MODULE: hidden_layer_module
 !
-! Define the dense, hidden, layers with neurons.
+! Define and deploy the fully-connected hidden layers with weights, bias, and
+! activation.
 !
 ! Authors
 ! -------
@@ -76,23 +77,27 @@ contains
       integer :: alloc_stat
 
       if (size(weights, 2) /= size(bias)) then
-         print *, size(weights)
+         print *, size(weights, 1), size(weights, 2)
          print *, size(bias)
-         stop "incompatible weights and bias arrays in <initialize_HiddenLayer>"
+         error stop "incompatible weights and bias arrays in <initialize_HiddenLayer>"
       end if
 
-      this%n_input  = size(weights, 1)
-      this%n_output = size(weights, 2)
+      if (.not. (is_valid_activation(activation))) then
+         print *, activation
+         error stop "invalid activation in <initialize_HiddenLayer>"
+      end if
+
+      this%n_input    = size(weights, 1)
+      this%n_output   = size(weights, 2)
+      this%activation = activation
 
       if (allocated(this%weights)) deallocate(this%weights)
       allocate(this%weights, source=weights, stat=alloc_stat)
-      if (alloc_stat /= 0) stop "allocation error in <in <initialize_HiddenLayer #1>"
+      if (alloc_stat /= 0) error stop "allocation error in <initialize_HiddenLayer #1>"
 
       if (allocated(this%bias)) deallocate(this%bias)
       allocate(this%bias, source=bias, stat=alloc_stat)
-      if (alloc_stat /= 0) stop "allocation error in <in <initialize_HiddenLayer #2>"
-
-      this%activation = activation
+      if (alloc_stat /= 0) error stop "allocation error in <initialize_HiddenLayer #2>"
    end subroutine initialize_HiddenLayer
 
    !-----------------------------------
@@ -105,7 +110,10 @@ contains
 
       real(8), dimension(this%n_output) :: throughput
 
-      if (size(input) /= this%n_input)  stop "incorrect input array size in <employ_HiddenLayer>"
+      if (size(input) /= this%n_input) then
+         print *, size(input)
+         error stop "incorrect input array size in <employ_HiddenLayer>"
+      end if
 
       throughput = matmul(input, this%weights) + this%bias
       output     = apply_activation(this%activation, throughput)
