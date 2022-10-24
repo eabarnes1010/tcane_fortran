@@ -22,7 +22,7 @@
 !
 ! Version
 ! -------
-! * 24 October 2022
+! * 25 October 2022
 !
 !==============================================================================
 module hidden_layer_module
@@ -75,14 +75,14 @@ contains
 
       integer :: alloc_stat
 
-      if (size(weights, 1) /= size(bias)) then
+      if (size(weights, 2) /= size(bias)) then
          print *, size(weights)
          print *, size(bias)
          stop "incompatible weights and bias arrays in <initialize_HiddenLayer>"
       end if
 
-      this%n_input  = size(weights, 2)
-      this%n_output = size(bias)
+      this%n_input  = size(weights, 1)
+      this%n_output = size(weights, 2)
 
       if (allocated(this%weights)) deallocate(this%weights)
       allocate(this%weights, source=weights, stat=alloc_stat)
@@ -107,7 +107,7 @@ contains
 
       if (size(input) /= this%n_input)  stop "incorrect input array size in <employ_HiddenLayer>"
 
-      throughput = matmul(transpose(this%weights), input) + this%bias
+      throughput = matmul(input, this%weights) + this%bias
       output     = apply_activation(this%activation, throughput)
    end function employ_HiddenLayer
 

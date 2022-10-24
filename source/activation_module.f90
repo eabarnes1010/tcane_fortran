@@ -1,8 +1,9 @@
 !==============================================================================
 ! MODULE: activation_module
 !
-! Define the suite of available activations.  This suite includes all
-! activations in Tensorflow 2.10.
+! Define the suite of available layer activation functions.  This suite
+! includes all activation functions in "Module:tf.keras.activations" of
+! Tensorflow 2.10.
 !
 ! Authors
 ! -------
@@ -23,7 +24,7 @@
 !
 ! Version
 ! -------
-! * 21 October 2022
+! * 25 October 2022
 !
 !==============================================================================
 module activation_module
