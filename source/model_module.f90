@@ -1,8 +1,8 @@
 !==============================================================================
 ! MODULE: model_module
 !
-! Define the model with an input layer, multiple hidden layers, and an output
-! layer.
+! Define and deploy the model with an input layer, multiple hidden layers, and
+! multiple output channels.
 !
 ! Authors
 ! -------
@@ -96,7 +96,7 @@ contains
 
       if (allocated(this%hidden_layers)) deallocate(this%hidden_layers)
       allocate(this%hidden_layers(this%n_hidden), stat=alloc_stat)
-      if (alloc_stat /= 0) stop "allocation error in <in <initialize_Model #1>"
+      if (alloc_stat /= 0) error stop "allocation error in <in <initialize_Model #1>"
 
       do i = 1, this%n_hidden
          call initialize( &
@@ -109,7 +109,7 @@ contains
 
       if (allocated(this%output_channels)) deallocate(this%output_channels)
       allocate(this%output_channels(this%n_output), stat=alloc_stat)
-      if (alloc_stat /= 0) stop "allocation error in <in <initialize_Model #2>"
+      if (alloc_stat /= 0) error stop "allocation error in <in <initialize_Model #2>"
 
       do i = 1, this%n_output
          call initialize( &
@@ -135,7 +135,10 @@ contains
       real(8), dimension(:), allocatable :: throughput
       allocate(throughput(0))
 
-      if (size(input) /= this%n_input) stop "incorrect input array size in <employ_Model>"
+      if (size(input) /= this%n_input) then
+         print *, size(input)
+         error stop "incorrect input array size in <employ_Model>"
+      end if
 
       throughput = employ(this%input_layer, input)
 

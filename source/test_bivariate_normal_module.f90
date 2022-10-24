@@ -1,7 +1,7 @@
 !==============================================================================
 ! MODULE: test_bivariate_normal_module
 !
-! Test the FORTRAN-based bivariate normal distribution utility functions.
+! Test the Fortran-based bivariate normal distribution utility functions.
 !
 ! Notes
 ! -----

@@ -1,73 +1,44 @@
 !==============================================================================
 ! MODULE: shash_module
 !
-! FORTRAN-based sinh-arcsinh normal (SHASH) distribution utility functions.
+! Fortran-based sinh-arcsinh normal (SHASH) distribution utility functions.
 !
-! Public functions
-! ----------------
-! pdf(x, loc, sigma, skewness, tailweight)
-!   Compute the SHASH probability density function (pdf).
-!   * x, loc, sigma, skewness, and tailweight may be scalars.
-!   * x, loc, sigma, skewness, and tailweight may be commensurate arrays.
-!   * x may be an array with loc, sigma, skewness, and tailweight scalars.
+! Public procedures
+! -----------------
+! pdf : compute the SHASH probability density function (pdf)
 !
-! cdf(x, loc, sigma, skewness, tailweight)
-!   Compute the SHASH cumulative distribution function (cdf).
-!   * x, loc, sigma, skewness, and tailweight may be scalars.
-!   * x, loc, sigma, skewness, and tailweight may be commensurate arrays.
-!   * x may be an array with loc, sigma, skewness, and tailweight scalars.
+! cdf : compute the SHASH cumulative distribution function (cdf)
 !
-! quantile(pr, loc, sigma, skewness, tailweight)
-!   Compute the SHASH inverse cumulative distribution function: that is,
-!   find x such that cdf(x) = pr.
-!   * pr, loc, sigma, skewness, and tailweight may be scalars.
-!   * pr, loc, sigma, skewness, and tailweight may be commensurate arrays.
+! quantile : compute the SHASH inverse cumulative distribution function
 !
-! median(loc, sigma, skewness, tailweight)
-!   Compute the distribution median.
-!   * loc, sigma, skewness, and tailweight may be scalars.
-!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
+! median : compute the distribution median
 !
-! mean(loc, sigma, skewness, tailweight)
-!   Compute the distribution mean.
-!   * loc, sigma, skewness, and tailweight may be scalars.
-!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
+! mean : compute the distribution mean
 !
-! mode(loc, sigma, skewness, tailweight)
-!   Compute the distribution mode.
-!   * loc, sigma, skewness, and tailweight may be scalars.
-!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
+! mode : compute the distribution mode
 !
-! variance(loc, sigma, skewness, tailweight)
-!   Compute the distribution variance.
-!   * loc, sigma, skewness, and tailweight may be scalars.
-!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
+! variance : compute the distribution variance
 !
-! stddev(loc, sigma, skewness, tailweight)
-!   Compute the distribution standard deviation.
-!   * loc, sigma, skewness, and tailweight may be scalars.
-!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
+! stddev : compute the distribution standard deviation
 !
-! skew(loc, sigma, skewness, tailweight)
-!   Compute the distribution moment coefficient of skewness.
-!   * loc, sigma, skewness, and tailweight may be scalars.
-!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
+! skew : compute the distribution moment coefficient of skewness
 !
-! compute_summary_statistics(loc, sigma, skewness, tailweight)
-!   Compute a suite of summary statistics.
-!   * loc, sigma, skewness, and tailweight may be scalars.
-!   * loc, sigma, skewness, and tailweight may be commensurate arrays.
+! compute_summary_statistics : compute a suite of summary statistics
 !
 ! Notes
 ! -----
 ! * The sinh-arcsinh normal distribution was defined in [1]. A more
 !   accessible, though less comprehensive, presentation is given in [2].
 !
-! * The argument "sigma" is the same as the Tensorflow "scale". We could not
-!   use "scale" because "scale" is the name of an intrinsic FORTRAN function.
+! * Throughout this mopdule, the argument "sigma" is the same as the
+!   Tensorflow "scale". We could not use "scale" because "scale" is the
+!   name of an intrinsic Fortran function.
 !
-! * This code was tested using:
-!   GNU Fortran (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders) 12.2.0
+! * The pdf and cdf functions may be called with three argument-shape
+!   combinations:
+!   - x, loc, sigma, skewness, tailweight are all scalars;
+!   - x, loc, sigma, skewness, tailweight are all commensurate arrays;
+!   - x is an array, but loc, sigma, skewness, tailweight are all scalars.
 !
 ! References
 ! ----------
@@ -99,7 +70,7 @@
 !
 ! Version
 ! -------
-! * 24 October 2022
+! * 25 October 2022
 !
 !==============================================================================
 module shash_module
@@ -110,22 +81,29 @@ module shash_module
    !-----------------------------------
    private
 
-   public pdf
    public cdf
-   public quantile
-   public median
-   public mean
-   public mode
-   public variance
-   public stddev
-   public skew
-   public summary_statistics
    public compute_summary_statistics
+   public mean
+   public median
+   public mode
+   public pdf
+   public quantile
+   public skew
+   public stddev
+   public variance
 
-   !------------------------------------------------------------------------------
-   ! Defined types
-   !------------------------------------------------------------------------------
-   type summary_statistics
+   !-----------------------------------
+   ! Module parameters
+   !-----------------------------------
+   real(8), parameter :: PI                   = 3.1415926535897932384626434_8
+   real(8), parameter :: PI_OVER_TWO          = 1.5707963267948966192313217_8
+   real(8), parameter :: ONE_OVER_SQRT_TWO    = 0.7071067811865475244008444_8
+   real(8), parameter :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461_8
+
+   !-----------------------------------
+   ! TYPE: summary_statistics
+   !-----------------------------------
+   type, public :: summary_statistics
       real(8) :: interquartile_range
       real(8) :: mean
       real(8) :: median
@@ -139,9 +117,9 @@ module shash_module
       real(8) :: variance
    end type
 
-   !------------------------------------------------------------------------------
-   ! Interface block
-   !------------------------------------------------------------------------------
+   !-----------------------------------
+   ! Interfaces
+   !-----------------------------------
    interface pdf
       module procedure pdf_elemental
       module procedure pdf_x_array
@@ -152,106 +130,10 @@ module shash_module
       module procedure cdf_x_array
    end interface
 
-   !-----------------------------------
-   ! Module parameters
-   !-----------------------------------
-   real(8), parameter :: PI                   = 3.1415926535897932384626434_8
-   real(8), parameter :: PI_OVER_TWO          = 1.5707963267948966192313217_8
-   real(8), parameter :: ONE_OVER_SQRT_TWO    = 0.7071067811865475244008444_8
-   real(8), parameter :: ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399461_8
-
    contains
 
    !---------------------------------------------------------------------------
-   ! function pdf_elemental(x, loc, sigma, skewness, tailweight)
-   !
-   ! Compute the SHASH probability density function (pdf).
-   !
-   ! Arguments
-   ! ---------
-   ! x : real scalar
-   !   The value at which to compute the SHASH probability density function.
-   !
-   ! loc : real scalar
-   !   The location parameter.
-   !
-   ! sigma : real scalar, sigma > 0
-   !   The scale parameter.
-   !
-   ! skewness : real scalar
-   !   The skewness parameter.
-   !
-   ! tailweight : real scalar, tailweight > 0
-   !   The tail-weight parameter.
-   !
-   ! Returns
-   ! -------
-   ! pdf : real scalar
-   !   The computed probability density function evaluated at x.
-   !
-   !---------------------------------------------------------------------------
-   elemental function pdf_elemental(x, loc, sigma, skewness, tailweight) result(pdf)
-      real(8) :: pdf
-      real(8), intent(in) :: x, loc, sigma, skewness, tailweight
-
-      real(8) :: xi, eta, eps, delta
-      real(8) :: y, z
-
-      call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
-
-      ! Apply Jones and Pewsey (2009) Equation (2) on page 762.
-      y = (x - xi) / eta
-      z = sinh(delta * asinh(y) - eps)
-      pdf = ONE_OVER_SQRT_TWO_PI * (delta / eta) * sqrt((1.0 + z**2) / (1.0 + y**2)) * exp(-z**2 / 2.0)
-   end function pdf_elemental
-
-   !---------------------------------------------------------------------------
-   ! function pdf_x_array(x, loc, sigma, skewness, tailweight)
-   !
-   ! Compute the SHASH probability density function (pdf) for an array x.
-   !
-   ! Arguments
-   ! ---------
-   ! x : real array
-   !   The values at which to compute the SHASH probability density function.
-   !
-   ! loc : real scalar
-   !   The location parameter.
-   !
-   ! sigma : real scalar, sigma > 0
-   !   The scale parameter.
-   !
-   ! skewness : real scalar
-   !   The skewness parameter.
-   !
-   ! tailweight : real scalar, tailweight > 0
-   !   The tail-weight parameter.
-   !
-   ! Returns
-   ! -------
-   ! pdf : real array
-   !   The computed probability density function evaluated at x.  The returned
-   !   pdf is the same size as x.
-   !
-   !---------------------------------------------------------------------------
-   pure function pdf_x_array(x, loc, sigma, skewness, tailweight) result(pdf)
-      real(8), intent(in) :: x(:)
-      real(8), intent(in) :: loc, sigma, skewness, tailweight
-      real(8), dimension( size(x) ) :: pdf
-
-      real(8) :: xi, eta, eps, delta
-      real(8), dimension( size(x) ) :: y, z
-
-      call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
-
-      ! Apply Jones and Pewsey (2009) Equation (2) on page 762.
-      y = (x - xi) / eta
-      z = sinh(delta * asinh(y) - eps)
-      pdf = ONE_OVER_SQRT_TWO_PI * (delta / eta) * sqrt((1.0 + z*z) / (1.0 + y*y)) * exp(-z*z / 2.0)
-   end function pdf_x_array
-
-   !---------------------------------------------------------------------------
-   ! function cdf_elemental(x, loc, sigma, skewness, tailweight)
+   ! FUNCTION: cdf_elemental(x, loc, sigma, skewness, tailweight)
    !
    ! Compute the SHASH cumulative distribution function (cdf).
    !
@@ -295,7 +177,7 @@ module shash_module
    end function cdf_elemental
 
    !------------------------------------------------------------------------
-   ! function cdf_x_array(x, loc, sigma, skewness, tailweight)
+   ! FUNCTION: cdf_x_array(x, loc, sigma, skewness, tailweight)
    !
    ! Compute the SHASH cumulative distribution function (cdf).
    !
@@ -341,17 +223,12 @@ module shash_module
    end function cdf_x_array
 
    !---------------------------------------------------------------------------
-   ! function quantile(pr, loc, sigma, skewness, tailweight)
+   ! FUNCTION: compute_summary_statistics(loc, sigma, skewness, tailweight, summary)
    !
-   ! Compute the SHASH inverse cumulative distribution function: that is,
-   ! find x such that cdf(x) = pr.
+   ! Compute a set of summary statistics for the SHASH distribution
    !
    ! Arguments
    ! ---------
-   ! pr : real scalar in the range 0 < p < 1.
-   !   The probability value at which to compute the SHASH inverse cumulative
-   !   distribution function.
-   !
    ! loc : real scalar
    !   The location parameter.
    !
@@ -366,46 +243,32 @@ module shash_module
    !
    ! Returns
    ! -------
-   ! quantile : real scalar
-   !   The computed inverse cumulative distribution function evaluated
-   !   at probability pr.
+   ! summary : summary_statistics, on output
    !
-   ! Notes
-   ! -----
-   ! * This function uses Newton's method, with a pretty good starting guess.
-   !   The result is accurate (|error in pr| < 1e-6), but it is a bit slow.
-   !
-   ! * If pr is out of the range 0 < pr < 1, this function fails.
    !---------------------------------------------------------------------------
-   elemental function quantile(pr, loc, sigma, skewness, tailweight) result(x)
-      real(8), intent(in) :: pr, loc, sigma, skewness, tailweight
-      real(8) :: x
+   elemental function compute_summary_statistics(loc, sigma, skewness, tailweight) result(summary)
+      real(8), intent(in) :: loc, sigma, skewness, tailweight
+      type (summary_statistics) :: summary
 
-      real(8) :: xi, eta, eps, delta, z
+      summary%mean   = mean(loc, sigma, skewness, tailweight)
+      summary%median = median(loc, sigma, skewness, tailweight)
+      summary%mode   = mode(loc, sigma, skewness, tailweight)
 
-      integer :: iteration
-      integer, parameter :: MAX_ITERATION = 5
+      summary%percentile_10 = quantile(0.10_8, loc, sigma, skewness, tailweight)
+      summary%percentile_25 = quantile(0.25_8, loc, sigma, skewness, tailweight)
+      summary%percentile_75 = quantile(0.75_8, loc, sigma, skewness, tailweight)
+      summary%percentile_90 = quantile(0.90_8, loc, sigma, skewness, tailweight)
 
-      real(8) :: difference
-      real(8), parameter :: MAX_ABS_DIFFERENCE = 1.0e-6
+      summary%interquartile_range = summary%percentile_75 - summary%percentile_25
+      summary%skew = skew(loc, sigma, skewness, tailweight)
 
-      call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
+      summary%stddev = stddev(loc, sigma, skewness, tailweight)
+      summary%variance = variance(loc, sigma, skewness, tailweight)
+   end function compute_summary_statistics
 
-      ! Apply Jones and Pewsey (2009) bottom of page 762, and an approximate
-      ! Gaussian cdf inverse, to get an initial approximation.
-      z = gaussian_cdf_inv(pr)
-      x = xi + eta * sinh((asinh(z) + eps) / delta)
-
-      ! Improve the approximation using Newton's method.
-      do iteration = 1, MAX_ITERATION
-         difference = cdf(x, loc, sigma, skewness, tailweight) - pr
-         x = x - difference/pdf(x, loc, sigma, skewness, tailweight)
-         if (abs(difference) <= MAX_ABS_DIFFERENCE) exit
-      end do
-   end function quantile
 
    !---------------------------------------------------------------------------
-   ! function mean(loc, sigma, skewness, tailweight)
+   ! FUNCTION: mean(loc, sigma, skewness, tailweight)
    !
    ! Compute the SHASH distribution mean.
    !
@@ -444,7 +307,7 @@ module shash_module
    end function mean
 
    !---------------------------------------------------------------------------
-   ! function median(loc, sigma, skewness, tailweight)
+   ! FUNCTION: median(loc, sigma, skewness, tailweight)
    !
    ! Compute the SHASH distribution median.
    !
@@ -487,7 +350,7 @@ module shash_module
    end function median
 
    !---------------------------------------------------------------------------
-   ! function mode(loc, sigma, skewness, tailweight)
+   ! FUNCTION: mode(loc, sigma, skewness, tailweight)
    !
    ! Compute the SHASH distribution mode.
    !
@@ -554,12 +417,15 @@ module shash_module
    end function mode
 
    !---------------------------------------------------------------------------
-   ! function variance(loc, sigma, skewness, tailweight)
+   ! FUNCTION: pdf_elemental(x, loc, sigma, skewness, tailweight)
    !
-   ! Compute the SHASH distribution variance.
+   ! Compute the SHASH probability density function (pdf).
    !
    ! Arguments
    ! ---------
+   ! x : real scalar
+   !   The value at which to compute the SHASH probability density function.
+   !
    ! loc : real scalar
    !   The location parameter.
    !
@@ -574,42 +440,35 @@ module shash_module
    !
    ! Returns
    ! -------
-   ! variance : real scalar
-   !   The computed variance.
-   !
-   ! Notes
-   ! -----
-   ! * This code uses two basic formulas:
-   !
-   !   var(X) = E(X^2) - (E(X))^2
-   !   var(a*X + b) = a^2 * var(X)
-   !
-   ! * The E(X) and E(X^2) are computed using the moment equations given on
-   !   page 764 of [1].
+   ! pdf : real scalar
+   !   The computed probability density function evaluated at x.
    !
    !---------------------------------------------------------------------------
-   elemental function variance(loc, sigma, skewness, tailweight)
-      real(8) :: variance
-      real(8), intent(in) :: loc, sigma, skewness, tailweight
+   elemental function pdf_elemental(x, loc, sigma, skewness, tailweight) result(pdf)
+      real(8) :: pdf
+      real(8), intent(in) :: x, loc, sigma, skewness, tailweight
 
       real(8) :: xi, eta, eps, delta
-      real(8) :: evX, evX2
+      real(8) :: y, z
 
       call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
 
-      ! Apply Jones and Pewsey (2009) middle of page 764.
-      evX = sinh(eps / delta) * jones_pewsey_p(1.0 / delta)
-      evX2 = (cosh(2.0 * eps / delta) * jones_pewsey_p(2.0 / delta) - 1.0) / 2.0
-      variance = eta**2 * (evX2 - evX**2)
-   end function variance
+      ! Apply Jones and Pewsey (2009) Equation (2) on page 762.
+      y = (x - xi) / eta
+      z = sinh(delta * asinh(y) - eps)
+      pdf = ONE_OVER_SQRT_TWO_PI * (delta / eta) * sqrt((1.0 + z**2) / (1.0 + y**2)) * exp(-z**2 / 2.0)
+   end function pdf_elemental
 
    !---------------------------------------------------------------------------
-   ! function stddev(loc, sigma, skewness, tailweight)
+   ! FUNCTION: pdf_x_array(x, loc, sigma, skewness, tailweight)
    !
-   ! Compute the SHASH distribution standard deviation.
+   ! Compute the SHASH probability density function (pdf) for an array x.
    !
    ! Arguments
    ! ---------
+   ! x : real array
+   !   The values at which to compute the SHASH probability density function.
+   !
    ! loc : real scalar
    !   The location parameter.
    !
@@ -624,19 +483,93 @@ module shash_module
    !
    ! Returns
    ! -------
-   ! stddev : real scalar
-   !   The computed standard deviation.
+   ! pdf : real array
+   !   The computed probability density function evaluated at x.  The returned
+   !   pdf is the same size as x.
    !
    !---------------------------------------------------------------------------
-   elemental function stddev(loc, sigma, skewness, tailweight)
-      real(8) :: stddev
+   pure function pdf_x_array(x, loc, sigma, skewness, tailweight) result(pdf)
+      real(8), intent(in) :: x(:)
       real(8), intent(in) :: loc, sigma, skewness, tailweight
+      real(8), dimension( size(x) ) :: pdf
 
-      stddev = sqrt(variance(loc, sigma, skewness, tailweight))
-   end function stddev
+      real(8) :: xi, eta, eps, delta
+      real(8), dimension( size(x) ) :: y, z
+
+      call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
+
+      ! Apply Jones and Pewsey (2009) Equation (2) on page 762.
+      y = (x - xi) / eta
+      z = sinh(delta * asinh(y) - eps)
+      pdf = ONE_OVER_SQRT_TWO_PI * (delta / eta) * sqrt((1.0 + z*z) / (1.0 + y*y)) * exp(-z*z / 2.0)
+   end function pdf_x_array
 
    !---------------------------------------------------------------------------
-   ! function skew(loc, sigma, skewness, tailweight)
+   ! FUNCTION: quantile(pr, loc, sigma, skewness, tailweight)
+   !
+   ! Compute the SHASH inverse cumulative distribution function: that is,
+   ! find x such that cdf(x) = pr.
+   !
+   ! Arguments
+   ! ---------
+   ! pr : real scalar in the range 0 < p < 1.
+   !   The probability value at which to compute the SHASH inverse cumulative
+   !   distribution function.
+   !
+   ! loc : real scalar
+   !   The location parameter.
+   !
+   ! sigma : real scalar, sigma > 0
+   !   The scale parameter.
+   !
+   ! skewness : real scalar
+   !   The skewness parameter.
+   !
+   ! tailweight : real scalar, tailweight > 0
+   !   The tail-weight parameter.
+   !
+   ! Returns
+   ! -------
+   ! quantile : real scalar
+   !   The computed inverse cumulative distribution function evaluated
+   !   at probability pr.
+   !
+   ! Notes
+   ! -----
+   ! * This function uses Newton's method, with a pretty good starting guess.
+   !   The result is accurate (|error in pr| < 1e-6), but it is a bit slow.
+   !
+   ! * If pr is out of the range 0 < pr < 1, this function fails.
+   !---------------------------------------------------------------------------
+   elemental function quantile(pr, loc, sigma, skewness, tailweight) result(x)
+      real(8), intent(in) :: pr, loc, sigma, skewness, tailweight
+      real(8) :: x
+
+      real(8) :: xi, eta, eps, delta, z
+
+      integer :: iteration
+      integer, parameter :: MAX_ITERATION = 5
+
+      real(8) :: difference
+      real(8), parameter :: MAX_ABS_DIFFERENCE = 1.0e-6
+
+      call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
+
+      ! Apply Jones and Pewsey (2009) bottom of page 762, and an approximate
+      ! Gaussian cdf inverse, to get an initial approximation.
+      z = gaussian_cdf_inv(pr)
+      x = xi + eta * sinh((asinh(z) + eps) / delta)
+
+      ! Improve the approximation using Newton's method.
+      do iteration = 1, MAX_ITERATION
+         difference = cdf(x, loc, sigma, skewness, tailweight) - pr
+         x = x - difference/pdf(x, loc, sigma, skewness, tailweight)
+         if (abs(difference) <= MAX_ABS_DIFFERENCE) exit
+      end do
+   end function quantile
+
+   !---------------------------------------------------------------------------
+   ! FUNCTION: skew(loc, sigma, skewness, tailweight)
    !
    ! Compute the SHASH distribution moment coefficient of skewness.
    !
@@ -688,9 +621,9 @@ module shash_module
    end function skew
 
    !---------------------------------------------------------------------------
-   ! ELEMENTAL function compute_summary_statistics(loc, sigma, skewness, tailweight, summary)
+   ! FUNCTION: stddev(loc, sigma, skewness, tailweight)
    !
-   ! Compute a set of summary statistics for the SHASH distribution
+   ! Compute the SHASH distribution standard deviation.
    !
    ! Arguments
    ! ---------
@@ -708,28 +641,66 @@ module shash_module
    !
    ! Returns
    ! -------
-   ! summary : summary_statistics, on output
+   ! stddev : real scalar
+   !   The computed standard deviation.
    !
    !---------------------------------------------------------------------------
-   elemental function compute_summary_statistics(loc, sigma, skewness, tailweight) result(summary)
+   elemental function stddev(loc, sigma, skewness, tailweight)
+      real(8) :: stddev
       real(8), intent(in) :: loc, sigma, skewness, tailweight
-      type (summary_statistics) :: summary
 
-      summary%mean   = mean(loc, sigma, skewness, tailweight)
-      summary%median = median(loc, sigma, skewness, tailweight)
-      summary%mode   = mode(loc, sigma, skewness, tailweight)
+      stddev = sqrt(variance(loc, sigma, skewness, tailweight))
+   end function stddev
 
-      summary%percentile_10 = quantile(0.10_8, loc, sigma, skewness, tailweight)
-      summary%percentile_25 = quantile(0.25_8, loc, sigma, skewness, tailweight)
-      summary%percentile_75 = quantile(0.75_8, loc, sigma, skewness, tailweight)
-      summary%percentile_90 = quantile(0.90_8, loc, sigma, skewness, tailweight)
+   !---------------------------------------------------------------------------
+   ! FUNCTION: variance(loc, sigma, skewness, tailweight)
+   !
+   ! Compute the SHASH distribution variance.
+   !
+   ! Arguments
+   ! ---------
+   ! loc : real scalar
+   !   The location parameter.
+   !
+   ! sigma : real scalar, sigma > 0
+   !   The scale parameter.
+   !
+   ! skewness : real scalar
+   !   The skewness parameter.
+   !
+   ! tailweight : real scalar, tailweight > 0
+   !   The tail-weight parameter.
+   !
+   ! Returns
+   ! -------
+   ! variance : real scalar
+   !   The computed variance.
+   !
+   ! Notes
+   ! -----
+   ! * This code uses two basic formulas:
+   !
+   !   var(X) = E(X^2) - (E(X))^2
+   !   var(a*X + b) = a^2 * var(X)
+   !
+   ! * The E(X) and E(X^2) are computed using the moment equations given on
+   !   page 764 of [1].
+   !
+   !---------------------------------------------------------------------------
+   elemental function variance(loc, sigma, skewness, tailweight)
+      real(8) :: variance
+      real(8), intent(in) :: loc, sigma, skewness, tailweight
 
-      summary%interquartile_range = summary%percentile_75 - summary%percentile_25
-      summary%skew = skew(loc, sigma, skewness, tailweight)
+      real(8) :: xi, eta, eps, delta
+      real(8) :: evX, evX2
 
-      summary%stddev = stddev(loc, sigma, skewness, tailweight)
-      summary%variance = variance(loc, sigma, skewness, tailweight)
-   end function compute_summary_statistics
+      call convert_tf_to_jp(loc, sigma, skewness, tailweight, xi, eta, eps, delta)
+
+      ! Apply Jones and Pewsey (2009) middle of page 764.
+      evX = sinh(eps / delta) * jones_pewsey_p(1.0 / delta)
+      evX2 = (cosh(2.0 * eps / delta) * jones_pewsey_p(2.0 / delta) - 1.0) / 2.0
+      variance = eta**2 * (evX2 - evX**2)
+   end function variance
 
 
    !===========================================================================
@@ -777,7 +748,7 @@ module shash_module
    end subroutine
 
    !---------------------------------------------------------------------------
-   ! function gaussian_cdf_inv(pr))
+   ! FUNCTION: gaussian_cdf_inv(pr))
    !
    ! Compute the approximate inverse cdf for a standard normal distribution.
    !
@@ -799,7 +770,7 @@ module shash_module
    !
    ! * If pr is out of the range 0 < pr < 1, this routine fails.
    !
-   ! * This FORTRAN code was inspired by John D. Cook's writeup found at:
+   ! * This Fortran code was inspired by John D. Cook's writeup found at:
    !   https://www.johndcook.com/blog/normal_cdf_inverse/.
    !
    !---------------------------------------------------------------------------
@@ -819,47 +790,56 @@ module shash_module
    end function gaussian_cdf_inv
 
    !---------------------------------------------------------------------------
-   ! function rational_approximation(t)
+   ! FUNCTION: Iv(v)
    !
-   ! Compute an approximate inverse cdf for a standard normal distribution
-   ! using the approximation given by Abramowitz and Stegun (1965) Equation
-   ! (26.2.23).
+   ! Compute the modified Bessel function of the first kind at (1/4):
+   ! $I_{v}(1/4)$.
    !
    ! Arguments
    ! ---------
-   ! t : real scalar
-   !   The value at which to compute Equation (26.2.23).
+   ! v :: real scalar, v > -1
    !
    ! Returns
    ! -------
-   ! rational_approximation : real scalar
+   ! f : real scalar
+   !   The value of $I_{v}(1/4)$.
    !
    ! Notes
    ! -----
-   ! * The rational approximation is computed using Horner's rule.
+   ! * The computation is carried out using
    !
-   ! * This FORTRAN code was inspired by John D. Cook's writeup found at:
-   !   https://www.johndcook.com/blog/normal_cdf_inverse/.
+   !       $I_v = \sum_{m=0}^{\infty} \frac{1}{8^{2m+v} m! \Gamma(m+v+1)}
+   !
+   !   See Equation (6.1.2) on page 202 of [1], and substitute in z = 1/4.
+   !
+   ! * Using only six terms in the infinite series is sufficient to achieve
+   !   full double precision for all necessary cases; i.e. for
+   !   $-1/2 < v < \infty$.
    !
    ! References
    ! ----------
-   ! Abramowitz, M. & Stegun, I. A., Handbook of Mathematical Functions:
-   ! with Formulas, Graphs, and Mathematical Tables, Dover Publications, 1965.
-   ! ISBN: 978-0486612720.
+   ! [1] S. Zhang and J. Jin. Computation of Special Functions. John Wiley and
+   ! Sons, Inc., 1996. ISBN 978-0471119630.
    !
    !---------------------------------------------------------------------------
-   elemental function rational_approximation(t)
-      real(8) :: rational_approximation
-      real(8), intent(in) :: t
+   elemental function Iv(v) result(f)
+      real(8) :: f
+      real(8), intent(in) :: v
 
-      real(8), parameter :: c(3) = [2.515517, 0.802853, 0.010328]
-      real(8), parameter :: d(3) = [1.432788, 0.189269, 0.001308]
+      real(8) :: term
+      integer :: m
 
-      rational_approximation = t - ((c(3)*t + c(2))*t + c(1)) / (((d(3)*t + d(2))*t + d(1))*t + 1.0)
-   end function rational_approximation
+      term = 1.0 / (8.0**v * gamma(v + 1.0))
+      f = term
+
+      do m = 1, 6
+         term = term / (64.0 * m * (v+m))
+         f = f + term
+      end do
+   end function Iv
 
    !---------------------------------------------------------------------------
-   ! function jones_pewsey_p(q)
+   ! FUNCTION: jones_pewsey_p(q)
    !
    ! Compute the Jones and Pewsey factor Pq as defined on page 764 of Jones and
    ! Pewsey (2009).
@@ -902,7 +882,7 @@ module shash_module
    end function jones_pewsey_p
 
    !------------------------------------------------------------------------------
-   ! function Kv(v)
+   ! FUNCTION: Kv(v)
    !
    ! Compute the modified Bessel function of the second kind at (1/4):
    ! $K_{v}(1/4)$.
@@ -973,52 +953,43 @@ module shash_module
    end function Kv
 
    !---------------------------------------------------------------------------
-   ! function Iv(v)
+   ! FUNCTION: rational_approximation(t)
    !
-   ! Compute the modified Bessel function of the first kind at (1/4):
-   ! $I_{v}(1/4)$.
+   ! Compute an approximate inverse cdf for a standard normal distribution
+   ! using the approximation given by Abramowitz and Stegun (1965) Equation
+   ! (26.2.23).
    !
    ! Arguments
    ! ---------
-   ! v :: real scalar, v > -1
+   ! t : real scalar
+   !   The value at which to compute Equation (26.2.23).
    !
    ! Returns
    ! -------
-   ! f : real scalar
-   !   The value of $I_{v}(1/4)$.
+   ! rational_approximation : real scalar
    !
    ! Notes
    ! -----
-   ! * The computation is carried out using
+   ! * The rational approximation is computed using Horner's rule.
    !
-   !       $I_v = \sum_{m=0}^{\infty} \frac{1}{8^{2m+v} m! \Gamma(m+v+1)}
-   !
-   !   See Equation (6.1.2) on page 202 of [1], and substitute in z = 1/4.
-   !
-   ! * Using only six terms in the infinite series is sufficient to achieve
-   !   full double precision for all necessary cases; i.e. for
-   !   $-1/2 < v < \infty$.
+   ! * This Fortran code was inspired by John D. Cook's writeup found at:
+   !   https://www.johndcook.com/blog/normal_cdf_inverse/.
    !
    ! References
    ! ----------
-   ! [1] S. Zhang and J. Jin. Computation of Special Functions. John Wiley and
-   ! Sons, Inc., 1996. ISBN 978-0471119630.
+   ! Abramowitz, M. & Stegun, I. A., Handbook of Mathematical Functions:
+   ! with Formulas, Graphs, and Mathematical Tables, Dover Publications, 1965.
+   ! ISBN: 978-0486612720.
    !
    !---------------------------------------------------------------------------
-   elemental function Iv(v) result(f)
-      real(8) :: f
-      real(8), intent(in) :: v
+   elemental function rational_approximation(t)
+      real(8) :: rational_approximation
+      real(8), intent(in) :: t
 
-      real(8) :: term
-      integer :: m
+      real(8), parameter :: c(3) = [2.515517, 0.802853, 0.010328]
+      real(8), parameter :: d(3) = [1.432788, 0.189269, 0.001308]
 
-      term = 1.0 / (8.0**v * gamma(v + 1.0))
-      f = term
-
-      do m = 1, 6
-         term = term / (64.0 * m * (v+m))
-         f = f + term
-      end do
-   end function Iv
+      rational_approximation = t - ((c(3)*t + c(2))*t + c(1)) / (((d(3)*t + d(2))*t + d(1))*t + 1.0)
+   end function rational_approximation
 
 end module shash_module

@@ -1,7 +1,9 @@
 !==============================================================================
 ! MODULE: read_json_module
 !
-!
+! Read the component parts of the .json-formatted network blueprint created by
+! Tensorflow-based intensity and track sub-projects. This is NOT a general
+! .json reader.
 !
 ! Authors
 ! -------
@@ -62,7 +64,7 @@ contains
       read(eunit, LINE_FORMAT, iostat=io_stat) line
       if (io_stat /= 0) then
          print *, '>>> ' // adjustl(trim(line))
-         stop 'read error in <get_line>'
+         error stop 'read error in <get_line>'
       end if
 
       ! print *, trim(line)
@@ -84,7 +86,7 @@ contains
       read(line(left:), *, iostat=io_stat) output
       if (io_stat /= 0) then
          print *, '>>> ' // adjustl(trim(line))
-         stop 'read error in <get_integer>'
+         error stop 'read error in <get_integer>'
       end if
    end function read_integer
 
@@ -99,7 +101,7 @@ contains
       integer :: alloc_stat, io_stat, i
 
       allocate(output(nrows), stat=alloc_stat)
-      if (alloc_stat /= 0) stop "allocation error in <in <read_list>"
+      if (alloc_stat /= 0) error stop "allocation error in <in <read_list>"
 
       call skip_line(eunit)
       do i = 1, nrows
@@ -108,7 +110,7 @@ contains
          read(line, *, iostat=io_stat) output(i)
          if (io_stat /= 0) then
             print *, '>>> ' // adjustl(trim(line))
-            stop 'read error in <get_list>'
+            error stop 'read error in <get_list>'
          end if
       end do
       call skip_line(eunit)
@@ -128,7 +130,7 @@ contains
       integer :: i, j
 
       allocate(output(nrows, ncols), stat=alloc_stat)
-      if (alloc_stat /= 0) stop "allocation error in <in <read_matrix>"
+      if (alloc_stat /= 0) error stop "allocation error in <in <read_matrix>"
 
       call skip_line(eunit)
       do i = 1, nrows
@@ -139,7 +141,7 @@ contains
             read(line, *, iostat=io_stat) output(i, j)
             if (io_stat /= 0) then
                print *, '>>> ' // adjustl(trim(line))
-               stop 'read error in <read_matrix>'
+               error stop 'read error in <read_matrix>'
             end if
          end do
          call skip_line(eunit)
@@ -164,7 +166,7 @@ contains
       read(line(left:), *, iostat=io_stat) output
       if (io_stat /= 0) then
          print *, '>>> ' // adjustl(trim(line))
-         stop 'read error in <read_real>'
+         error stop 'read error in <read_real>'
       end if
    end function read_real
 
@@ -184,7 +186,7 @@ contains
       read(line(left:), *, iostat=io_stat) output
       if (io_stat /= 0) then
          print *, '>>> ' // adjustl(trim(line))
-         stop 'read error in <get_string>'
+         error stop 'read error in <get_string>'
       end if
    end function read_string
 
@@ -200,7 +202,7 @@ contains
       integer :: i
 
       allocate(output(nrows), stat=alloc_stat)
-      if (alloc_stat /= 0) stop 'allocation error in <read_vector>'
+      if (alloc_stat /= 0) error stop 'allocation error in <read_vector>'
 
       call skip_line(eunit)
       do i = 1, nrows
@@ -209,7 +211,7 @@ contains
          read(line, *, iostat=io_stat) output(i)
          if (io_stat /= 0) then
             print *, '>>> ' // adjustl(trim(line))
-            stop 'read error in <read_vector>'
+            error stop 'read error in <read_vector>'
          end if
       end do
       call skip_line(eunit)

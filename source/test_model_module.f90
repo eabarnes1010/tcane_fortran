@@ -1,7 +1,7 @@
 !==============================================================================
 ! MODULE: test_model_module
 !
-! Test the FORTRAN-based evaluation system for the Shas and Bivariate Noraml
+! Test the Fortran-based evaluation system for the Shas and Bivariate Noraml
 ! Artificial Neural Network functions.
 !
 ! Authors
@@ -56,7 +56,7 @@ module test_model_module
    !-----------------------------------
    subroutine simple_test()
       real(8), dimension(22) :: x_sample
-      real(8), dimension(5) :: output, truth
+      real(8), dimension(5) :: computed, truth
 
       type(Model) :: test_model
 
@@ -78,10 +78,10 @@ module test_model_module
 
       details = read_blueprint(filename)
       call initialize(test_model, details)
-      output = employ(test_model, x_sample)
+      computed = employ(test_model, x_sample)
 
-      print *, truth
-      print *, output
+      write(*,*) 'test_model_module:                          max_abs_error = ', maxval(abs(computed-truth))
+
    end subroutine
 
 end module test_model_module

@@ -1,7 +1,7 @@
 !==============================================================================
 ! MODULE: input_layer_module
 !
-! Define the output layer with normalization.
+! Define and deploy the input layer with normalization.
 !
 ! Authors
 ! -------
@@ -22,7 +22,7 @@
 !
 ! Version
 ! -------
-! * 24 October 2022
+! * 25 October 2022
 !
 !==============================================================================
 module input_layer_module
@@ -70,17 +70,24 @@ contains
 
       integer :: alloc_stat
 
-      if (size(mean) /= size(std)) stop "mismatched mean and std arrays in <initialize_InputLayer>"
+      if (size(mean) /= size(std)) then
+         print *, size(mean), size(std)
+         error stop "mismatched mean and std arrays in <initialize_InputLayer>"
+      end if
+
+      if (any(std <= 0.0_8)) then
+         error stop "invalid std array in <initialize_InputLayer>"
+      end if
 
       this%n_input = size(mean)
 
       if (allocated(this%mean)) deallocate(this%mean)
       allocate(this%mean, source=mean, stat=alloc_stat)
-      if (alloc_stat /= 0) stop "allocation error in <in <initialize_InputLayer #1>"
+      if (alloc_stat /= 0) error stop "allocation error in <in <initialize_InputLayer #1>"
 
       if (allocated(this%std)) deallocate(this%std)
       allocate(this%std, source=std, stat=alloc_stat)
-      if (alloc_stat /= 0) stop "allocation error in <in <initialize_InputLayer #2>"
+      if (alloc_stat /= 0) error stop "allocation error in <in <initialize_InputLayer #2>"
    end subroutine initialize_InputLayer
 
    !-----------------------------------
@@ -91,7 +98,7 @@ contains
       real(8), dimension(:),           intent(in) :: input
       real(8), dimension(this%n_input)            :: output
 
-      if (size(input) /= this%n_input)  stop "incorrect input array size in <employ_InputLayer>"
+      if (size(input) /= this%n_input)  error stop "incorrect input array size in <employ_InputLayer>"
 
       output = (input - this%mean)/this%std
    end function employ_InputLayer

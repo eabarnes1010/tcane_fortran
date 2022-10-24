@@ -1,7 +1,13 @@
 !==============================================================================
 ! MODULE: transformation_module
 !
-! Define the suite of available scalar transfomations.
+! Define the suite of available scalar transformations.
+!
+! Public procedures
+! -----------------
+! apply_transformation : apply to the input yielding the output.
+!
+! is_valid_transformation : check if the transformation is available.
 !
 ! Authors
 ! -------
@@ -22,7 +28,7 @@
 !
 ! Version
 ! -------
-! * 20 October 2022
+! * 25 October 2022
 !
 !==============================================================================
 module transformation_module
@@ -34,7 +40,25 @@ module transformation_module
 
 contains
 
-   !-----------------------------------
+   !---------------------------------------------------------------------------
+   ! FUNCTION: apply_transformation
+   !
+   ! Apply the designated scalar transformation.
+   !
+   ! Arguments
+   ! ---------
+   ! transformation : string
+   !   transformation name
+   !
+   ! input : real scalar
+   !   value to be transformed
+   !
+   ! Returns
+   ! -------
+   ! output : real scalar
+   !   value of the transformed input
+   !
+   !---------------------------------------------------------------------------
    function apply_transformation(transformation, input) result(output)
       character(len=12), intent(in) :: transformation
       real(8),           intent(in) :: input
@@ -54,17 +78,33 @@ contains
             output =  tanh(input)
 
          case default
-            stop "transformation type not implemented."
+            print *, transformation
+            error stop "transformation type not implemented."
 
       end select
    end function apply_transformation
 
-   !-----------------------------------
+   !---------------------------------------------------------------------------
+   ! FUNCTION: is_valid_transformation
+   !
+   ! Checks that the named transformation is available (valid).
+   !
+   ! Arguments
+   ! ---------
+   ! transformation : string
+   !   transformation name
+   !
+   ! Returns
+   ! -------
+   ! is_valid : logical
+   !   equals .true. if the transformation is available, otherwise .false.
+   !
+   !---------------------------------------------------------------------------
    function is_valid_transformation(transformation) result(is_valid)
       character(len=12), intent(in) :: transformation
       logical                       :: is_valid
 
-      is_valid = .TRUE.
+      is_valid = .true.
 
       select case(transformation)
          case ("EXPONENTIAL")
@@ -73,7 +113,7 @@ contains
          case ("TANH")
 
          case default
-            is_valid = .FALSE.
+            is_valid = .false.
       end select
    end function is_valid_transformation
 

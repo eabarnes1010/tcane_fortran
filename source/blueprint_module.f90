@@ -2,7 +2,7 @@
 ! MODULE: blueprints_module
 !
 ! Define the components of the artificial neural network to be passed from the
-! Python-based training code (Tensorflow) to the stand-alone, FORTRAN-based,
+! Python-based training code (Tensorflow) to the stand-alone, Fortran-based,
 ! evaluation code.
 !
 ! Authors
@@ -24,7 +24,7 @@
 !
 ! Version
 ! -------
-! * 22 October 2022
+! * 25 October 2022
 !
 !==============================================================================
 module blueprint_module
@@ -38,6 +38,11 @@ module blueprint_module
    private
 
    public :: read_blueprint
+
+   !-----------------------------------
+   ! Module parameters
+   !-----------------------------------
+   integer, parameter :: EUNIT = 11
 
    !-----------------------------------
    ! TYPE: InputLayerTraits
@@ -83,11 +88,6 @@ module blueprint_module
       type(OutputChannelTraits), dimension(:), allocatable :: output_traits
    end type Blueprint
 
-   !-----------------------------------
-   ! Module parameters
-   !-----------------------------------
-   integer, parameter :: EUNIT = 11
-
 contains
 
    !-----------------------------------
@@ -100,10 +100,10 @@ contains
       integer alloc_stat, io_stat, i
 
       allocate(output, stat=alloc_stat)
-      if (alloc_stat /= 0) stop 'allocation error in <read_blueprint #1>'
+      if (alloc_stat /= 0) error stop 'allocation error in <read_blueprint #1>'
 
       open(unit=EUNIT, file=filename, status='old', action='read', iostat=io_stat)
-      if (io_stat /= 0) stop 'file open error in <read_blueprint>'
+      if (io_stat /= 0) error stop 'file open error in <read_blueprint>'
 
       ! Skip the { on the first line.
       call skip_line(eunit)
@@ -123,7 +123,7 @@ contains
 
       ! Read the hidden traits one layer at a time.
       allocate(output%hidden_traits(output%n_hidden), stat=alloc_stat)
-      if (alloc_stat /= 0) stop 'allocation error in <read_blueprint #2>'
+      if (alloc_stat /= 0) error stop 'allocation error in <read_blueprint #2>'
 
       call skip_line(eunit)
       do i = 1, output%n_hidden
@@ -135,7 +135,7 @@ contains
 
       ! Read the output traits one channel at a time.
       allocate(output%output_traits(output%n_output), stat=alloc_stat)
-      if (alloc_stat /= 0) stop 'allocation error in <read_blueprint #3>'
+      if (alloc_stat /= 0) error stop 'allocation error in <read_blueprint #3>'
 
       call skip_line(eunit)
       do i = 1, output%n_output
@@ -158,7 +158,7 @@ contains
       integer alloc_stat, n_input
 
       allocate(output, stat=alloc_stat)
-      if (alloc_stat /= 0) stop 'allocation error in <read_input_traits>'
+      if (alloc_stat /= 0) error stop 'allocation error in <read_input_traits>'
 
       n_input     = read_integer(eunit)
       output%mean = read_vector(eunit, n_input)
@@ -175,7 +175,7 @@ contains
       integer alloc_stat, n_input, n_output
 
       allocate(output, stat=alloc_stat)
-      if (alloc_stat /= 0) stop 'allocation error in <read_hidden_traits>'
+      if (alloc_stat /= 0) error stop 'allocation error in <read_hidden_traits>'
 
       n_input  = read_integer(eunit)
       n_output = read_integer(eunit)
@@ -195,7 +195,7 @@ contains
       integer alloc_stat, n_input
 
       allocate(output, stat=alloc_stat)
-      if (alloc_stat /= 0) stop 'allocation error in <read_output_traits>'
+      if (alloc_stat /= 0) error stop 'allocation error in <read_output_traits>'
 
       n_input  = read_integer(eunit)
 
