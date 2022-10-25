@@ -20,7 +20,7 @@
 !
 ! Version
 ! -------
-! * 16 October 2022
+! * 25 October 2022
 !
 !==============================================================================
 module utilities_module
@@ -30,27 +30,11 @@ module utilities_module
    ! Visibility
    !----------------------------------------------------------------------------
    private
+
    public :: to_upper
    public :: to_lower
    public :: get_time_string
    public :: get_date_string
-
-   !-----------------------------------
-   ! Module parameters
-   !-----------------------------------
-
-   !-----------------------------------
-   ! Derived types
-   !-----------------------------------
-
-   !-----------------------------------
-   ! Interfaces
-   !-----------------------------------
-
-   !-----------------------------------
-   ! Module variables
-   !-----------------------------------
-
 
 contains
 
@@ -85,7 +69,6 @@ contains
 
    end function to_upper
 
-
    !-----------------------------------------------------------------------------
    ! FUNCTION: to_lower
    !
@@ -117,7 +100,6 @@ contains
 
    end function to_lower
 
-
    !-----------------------------------------------------------------------------
    ! FUNCTION: get_time_string
    !
@@ -133,7 +115,6 @@ contains
          system_time(1:2), system_time(3:4), system_time(5:8)
 
    end function get_time_string
-
 
    !-----------------------------------------------------------------------------
    ! FUNCTION: get_date_string
