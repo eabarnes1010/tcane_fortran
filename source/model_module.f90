@@ -4,6 +4,23 @@
 ! Define and deploy the model with an input layer, multiple hidden layers, and
 ! multiple output channels.
 !
+! Notes
+! -----
+! * A model is a sequence of three distinct sets of components: the input
+!   layer, the hidden layers, and the output channels.
+!
+!   -- The input layer normalizes the input. The input layer is fully-connected
+!      to the first hidden layer.
+!
+!   -- The hidden layers are a sequence of one or more fully-connected
+!      (dense) layers. The hidden layers may be different sizes, i.e. have a
+!      different number of neurons. Each hidden layer has a matrix of weights,
+!      a vector of biases, and an activation function.
+!
+!   -- There is one output channel for each scalar output. Each output channel
+!      has one neuron, which is fully-connected to the last hidden layer. The
+!      also transforms and rescales the output.
+!
 ! Authors
 ! -------
 ! Dr. Randal J. Barnes

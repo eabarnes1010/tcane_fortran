@@ -4,6 +4,23 @@
 ! Define and deploy the output channels with weights, bias, activation,
 ! transformation, and scaling.
 !
+! Notes
+! -----
+! * An output channel has a single neuron.  This neuron is fully-connected to
+!   the last hidden layer. Thus, the output channel has a vector of weights,
+!   a scalar bias, and an activation function.
+!
+!   The scalar output from the neuron is then fed into a transformation
+!   function. For channels that must yield strictly positive values (e.g. a
+!   standard deviation), this transformation will be a Softmax. For channels
+!   that are bounded between plus/minus one (e.g. a correlation), this trans-
+!   formation will be a Tanh. For unconstrained cases, this transformation
+!   will be a simple pass-through using a Linear.
+!
+!   The scalar output from the transformation is then fed into rescaling.  The
+!   rescaling is the opposite of normalization. The rescaling multiplies by the
+!   std and adds the mean.
+!
 ! Authors
 ! -------
 ! Dr. Randal J. Barnes
