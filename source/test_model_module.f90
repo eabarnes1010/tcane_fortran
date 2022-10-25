@@ -1,7 +1,7 @@
 !==============================================================================
 ! MODULE: test_model_module
 !
-! Test the Fortran-based evaluation system for the Shas and Bivariate Noraml
+! Test the Fortran-based evaluation system for the Shash and Bivariate Normal
 ! Artificial Neural Network functions.
 !
 ! Authors
@@ -23,11 +23,13 @@
 !
 ! Version
 ! -------
-! * 24 October 2022
+! * 25 October 2022
 !
 !==============================================================================
 module test_model_module
    use blueprint_module
+   use isclose_module
+   use iso_fortran_env, only : ERROR_UNIT
    use model_module
 
    implicit none
@@ -38,15 +40,18 @@ module test_model_module
    private
    public :: test_model
 
+   !-----------------------------------
+   ! Module parameters
+   !-----------------------------------
+   real(8), parameter :: ABSOLUTE_TOLERANCE = 1e-5
+
    contains
 
    !-----------------------------------
    ! SUBROUTINE: test_model
    !-----------------------------------
    subroutine test_model()
-      write(*,*) '=========='
       write(*,*) 'test_model'
-      write(*,*) '=========='
 
       call simple_test()
    end subroutine
@@ -56,12 +61,10 @@ module test_model_module
    !-----------------------------------
    subroutine simple_test()
       real(8), dimension(22) :: x_sample
-      real(8), dimension(5) :: computed, truth
-
+      real(8), dimension(5)  :: actual, desired
       type(Model) :: test_model
-
       type(Blueprint) :: details
-      character(len=*), parameter :: filename = "D:\Google Drive\Research\Shash_jht\data\test_blueprint.json"
+      character(len=*), parameter :: filename = ".\data\test_blueprint.json"
 
       x_sample = [ &
          4.0000e+00,  5.5000e+01, -2.6300e+01, -5.2000e+00, &
@@ -72,16 +75,17 @@ module test_model_module
          5.0000e-01,  5.0000e-01 &
       ]
 
-      truth = [ &
+      desired = [ &
          -11.033484, -5.495101, 42.222622, 36.678978, 0.037328 &
       ]
 
       details = read_blueprint(filename)
       call initialize(test_model, details)
-      computed = employ(test_model, x_sample)
+      actual = employ(test_model, x_sample)
 
-      write(*,*) 'test_model_module:                          max_abs_error = ', maxval(abs(computed-truth))
-
+      if (.not. isclose(actual, desired, atol=ABSOLUTE_TOLERANCE)) then
+         write(ERROR_UNIT,*) 'TEST FAILED: test_model'
+      end if
    end subroutine
 
 end module test_model_module

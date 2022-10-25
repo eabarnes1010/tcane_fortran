@@ -2,7 +2,7 @@
 ! MODULE: activation_module
 !
 ! Define the suite of available layer activation functions.  This suite
-! includes all activation functions in "Module:tf.keras.activations" of
+! includes all activation functions in 'Module:tf.keras.activations' of
 ! Tensorflow 2.10.
 !
 ! Public procedures
@@ -74,20 +74,20 @@ contains
       real(8), parameter :: LAMBDA = 1.0507009873554804934193349852946_8
 
       select case(trim(activation))
-         case ("ELU")
+         case ('ELU')
             where (input > 0.0_8)
                output = input
             elsewhere
                output = exp(input) - 1.0_8
             end where
 
-         case ("EXPONENTIAL")
+         case ('EXPONENTIAL')
             output = exp(input)
 
-         case ("GELU")
+         case ('GELU')
             output = input * (1.0_8 + erf(input/sqrt(2.0_8))) / 2.0_8
 
-         case ("HARD_SIGMOID")
+         case ('HARD_SIGMOID')
             where (input < -2.5_8)
                output = 0.0_8
             elsewhere (input > 2.5_8)
@@ -96,40 +96,40 @@ contains
                output = 0.2_8 * input + 0.5_8
             end where
 
-         case ("LINEAR")
+         case ('LINEAR')
             output = input
 
-         case ("RELU")
+         case ('RELU')
             output = max(0.0_8, input)
 
-         case ("SELU")
+         case ('SELU')
             where (input > 0.0_8)
                output = LAMBDA * input
             elsewhere
                output = LAMBDA * ALPHA * (exp(input) - 1.0_8)
             end where
 
-         case ("SIGMOID")
+         case ('SIGMOID')
             output = 1.0_8 / (1.0_8 + exp(-input))
 
-         case ("SOFTMAX")
+         case ('SOFTMAX')
             output = exp(input)/sum(exp(input))
 
-         case ("SOFTPLUS")
+         case ('SOFTPLUS')
             output = log(exp(input) + 1.0_8)
 
-         case ("SOFTSIGN")
+         case ('SOFTSIGN')
             output = input / (abs(input) + 1.0_8)
 
-         case ("SWISH")
+         case ('SWISH')
             output =  input / (1.0_8 + exp(-input))
 
-         case ("TANH")
+         case ('TANH')
             output =  tanh(input)
 
          case default
             print *, activation
-            error stop "activation type not implemented."
+            error stop 'activation type not implemented.'
 
       end select
    end function apply_activation
@@ -157,19 +157,19 @@ contains
       is_valid = .true.
 
       select case(activation)
-         case ("ELU")
-         case ("EXPONENTIAL")
-         case ("GELU")
-         case ("HARD_SIGMOID")
-         case ("LINEAR")
-         case ("RELU")
-         case ("SELU")
-         case ("SIGMOID")
-         case ("SOFTMAX")
-         case ("SOFTPLUS")
-         case ("SOFTSIGN")
-         case ("SWISH")
-         case ("TANH")
+         case ('ELU')
+         case ('EXPONENTIAL')
+         case ('GELU')
+         case ('HARD_SIGMOID')
+         case ('LINEAR')
+         case ('RELU')
+         case ('SELU')
+         case ('SIGMOID')
+         case ('SOFTMAX')
+         case ('SOFTPLUS')
+         case ('SOFTSIGN')
+         case ('SWISH')
+         case ('TANH')
 
          case default
             is_valid = .false.
