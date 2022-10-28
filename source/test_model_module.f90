@@ -66,23 +66,35 @@ module test_model_module
       type(Blueprint) :: details
       character(len=*), parameter :: filename = ".\data\test_blueprint.json"
 
+      details = read_blueprint(filename)
+      call initialize(test_model, details)
+
       x_sample = [ &
-         4.0000e+00,  5.5000e+01, -2.6300e+01, -5.2000e+00, &
-        -1.5800e+01,  4.7400e+01, -3.8900e+01,  9.4400e+01, &
-        -3.8900e+01, -1.6700e+01,  1.4410e+02,  1.8800e+01, &
-         4.7500e+01, -5.0000e+00,  1.8000e+01,  1.7800e+01, &
-         2.6400e+01,  1.3978e+03,  5.0000e-01, -1.5000e+00, &
-         5.0000e-01,  5.0000e-01 &
+           4.00,  50.00,  74.70, -10.70, -32.00, -32.00,  -8.30, -30.60, &
+          47.20,  -8.30, 111.40,  16.30,  63.20,  10.00,  16.00,  15.70, &
+          29.10, 654.20,   9.80,   3.80,  -2.20, -11.20 &
       ]
 
       desired = [ &
-         -11.033484, -5.495101, 42.222622, 36.678978, 0.037328 &
+         18.785368, -5.833050, 38.011936, 38.096218, -0.021327 &
       ]
 
-      details = read_blueprint(filename)
-      call initialize(test_model, details)
       actual = employ(test_model, x_sample)
+      if (.not. isclose(actual, desired, atol=ABSOLUTE_TOLERANCE)) then
+         write(ERROR_UNIT,*) 'TEST FAILED: test_model'
+      end if
 
+      x_sample = [ &
+           4.00,  125.00,  13.40, -29.50,  -8.00,  24.10,  16.70, -16.70, &
+         -16.70,   16.70, 127.60,  15.40, 102.00,  10.00,  14.70,   6.90, &
+          26.70, 1815.20,   0.00,  -8.00,   4.00,   4.00 &
+      ]
+
+      desired = [ &
+         2.902810, -13.442649, 32.559185, 30.183308, 0.029761 &
+      ]
+
+      actual = employ(test_model, x_sample)
       if (.not. isclose(actual, desired, atol=ABSOLUTE_TOLERANCE)) then
          write(ERROR_UNIT,*) 'TEST FAILED: test_model'
       end if
