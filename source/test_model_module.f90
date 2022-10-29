@@ -53,51 +53,64 @@ module test_model_module
    subroutine test_model()
       write(*,*) 'test_model'
 
-      call simple_test()
+      call test_shash3_case()
+      call test_bivariate_normal_case()
    end subroutine
 
    !-----------------------------------
-   ! SUBROUTINE: simple_test
+   ! SUBROUTINE: test_shash3_case
    !-----------------------------------
-   subroutine simple_test()
+   subroutine test_shash3_case()
+      real(8), dimension(16) :: x_sample
+      real(8), dimension(4)  :: actual, desired
+      type(Model) :: test_model
+      type(Blueprint) :: details
+
+      details = read_blueprint(".\data\intensity_shash3_test_blueprint.json")
+      call initialize(test_model, details)
+
+      x_sample = [ &
+         30.0, 43.5,   4.0,   1.5,  4.5, -5.5, 1.5, -0.5, 0.0, 11.1, &
+         28.6,  7.1, 812.4, -53.5, 97.0, 75.0 &
+      ]
+
+      desired = [ &
+         0.23195606470108032, 9.098888397216797, -0.18818049132823944, 1.0 &
+      ]
+
+      actual = employ(test_model, x_sample)
+      if (.not. isclose(actual, desired, atol=ABSOLUTE_TOLERANCE)) then
+         write(ERROR_UNIT,*) 'TEST FAILED: test_shash3_case'
+      end if
+   end subroutine test_shash3_case
+
+   !-----------------------------------
+   ! SUBROUTINE: test_bivariate_normal_case
+   !-----------------------------------
+   subroutine test_bivariate_normal_case()
       real(8), dimension(22) :: x_sample
       real(8), dimension(5)  :: actual, desired
       type(Model) :: test_model
       type(Blueprint) :: details
-      character(len=*), parameter :: filename = ".\data\test_blueprint.json"
 
-      details = read_blueprint(filename)
+      details = read_blueprint(".\data\track_bivariate_normal_test_blueprint.json")
       call initialize(test_model, details)
 
       x_sample = [ &
-           4.00,  50.00,  74.70, -10.70, -32.00, -32.00,  -8.30, -30.60, &
-          47.20,  -8.30, 111.40,  16.30,  63.20,  10.00,  16.00,  15.70, &
-          29.10, 654.20,   9.80,   3.80,  -2.20, -11.20 &
+           4.0, 55.0, 28.7, -13.0, 28.5, -44.2, -52.8, -75.0, 125.0, 2.8, &
+         111.1, 20.5, 37.0,   5.0, 25.0,   9.4,  30.3,  11.6,   3.0, 7.0, &
+          -5.0, -5.0 &
       ]
 
       desired = [ &
-         18.785368, -5.833050, 38.011936, 38.096218, -0.021327 &
+         20.35586929321289, 2.1636693477630615, 46.34773635864258, &
+         45.1985969543457,  0.008352618664503098 &
       ]
 
       actual = employ(test_model, x_sample)
       if (.not. isclose(actual, desired, atol=ABSOLUTE_TOLERANCE)) then
-         write(ERROR_UNIT,*) 'TEST FAILED: test_model'
+         write(ERROR_UNIT,*) 'TEST FAILED: test_bivariate_normal_case'
       end if
-
-      x_sample = [ &
-           4.00,  125.00,  13.40, -29.50,  -8.00,  24.10,  16.70, -16.70, &
-         -16.70,   16.70, 127.60,  15.40, 102.00,  10.00,  14.70,   6.90, &
-          26.70, 1815.20,   0.00,  -8.00,   4.00,   4.00 &
-      ]
-
-      desired = [ &
-         2.902810, -13.442649, 32.559185, 30.183308, 0.029761 &
-      ]
-
-      actual = employ(test_model, x_sample)
-      if (.not. isclose(actual, desired, atol=ABSOLUTE_TOLERANCE)) then
-         write(ERROR_UNIT,*) 'TEST FAILED: test_model'
-      end if
-   end subroutine
+   end subroutine test_bivariate_normal_case
 
 end module test_model_module
