@@ -67,7 +67,7 @@ contains
          error stop 'read error in <get_line>'
       end if
 
-      ! print *, trim(line)
+!      print *, adjustl(trim(line))
    end function get_line
 
    !-----------------------------------

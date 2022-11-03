@@ -376,6 +376,7 @@
       }
    ],
    "test_cases": {
+      "n_test": 2,	   
       "x_test": [
          [
             4.0,

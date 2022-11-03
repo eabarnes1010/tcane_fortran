@@ -24,7 +24,7 @@
 !
 ! Version
 ! -------
-! * 25 October 2022
+! * 03 November 2022
 !
 !==============================================================================
 module blueprint_module
@@ -73,6 +73,16 @@ module blueprint_module
    end type OutputChannelTraits
 
    !-----------------------------------
+   ! TYPE: TestCases
+   !-----------------------------------
+   type, public :: TestCases
+      integer                              :: n_test
+      real(8), dimension(:,:), allocatable :: x_test
+      real(8), dimension(:,:), allocatable :: predictions
+   end type TestCases
+
+
+   !-----------------------------------
    ! TYPE: Blueprint
    !-----------------------------------
    type, public :: Blueprint
@@ -86,6 +96,8 @@ module blueprint_module
       type(InputLayerTraits)                               :: input_traits
       type(HiddenLayerTraits),   dimension(:), allocatable :: hidden_traits
       type(OutputChannelTraits), dimension(:), allocatable :: output_traits
+
+      type(TestCases),                         allocatable :: test_cases
    end type Blueprint
 
 contains
@@ -143,9 +155,14 @@ contains
          output%output_traits(i) = read_output_traits(eunit)
          call skip_line(eunit)
       end do
+      call skip_line(eunit)
+
+      ! Read the test cases.
+      call skip_line(eunit)
+      output%test_cases = read_test_cases(eunit, output%n_input, output%n_output)
+      call skip_line(eunit)
 
       close(unit=EUNIT)
-
    end function read_blueprint
 
    !-----------------------------------
@@ -205,5 +222,22 @@ contains
       output%mean           = read_real(eunit)
       output%std            = read_real(eunit)
    end function read_output_traits
+
+   !-----------------------------------
+   ! FUNCTION: read_test_cases
+   !-----------------------------------
+   function read_test_cases(eunit, n_input, n_output) result(output)
+      integer :: eunit, n_input, n_output
+      type(TestCases), allocatable :: output
+
+      integer alloc_stat
+
+      allocate(output, stat=alloc_stat)
+      if (alloc_stat /= 0) error stop 'allocation error in <read_test_cases>'
+
+      output%n_test      = read_integer(eunit)
+      output%x_test      = read_matrix(eunit, output%n_test, n_input)
+      output%predictions = read_matrix(eunit, output%n_test, n_output)
+   end function read_test_cases
 
 end module blueprint_module
