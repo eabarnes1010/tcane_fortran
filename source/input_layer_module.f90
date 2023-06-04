@@ -82,12 +82,21 @@ contains
       this%n_input = size(mean)
 
       if (allocated(this%mean)) deallocate(this%mean)
-      allocate(this%mean, source=mean, stat=alloc_stat)
+      
+      !apparently some gfortran compilers do not support the
+      !source= specifier in the allocate statement, even with using -std=f2003 or f2008.
+      !Thus replace:
+      !allocate(this%mean, source=mean, stat=alloc_stat)
+      !by: (similar changes in other places that use source= specifier)
+      allocate(this%mean(this%n_input), stat=alloc_stat)
       if (alloc_stat /= 0) error stop "allocation error in <in <initialize_InputLayer #1>"
+      this%mean = mean
 
       if (allocated(this%std)) deallocate(this%std)
-      allocate(this%std, source=std, stat=alloc_stat)
+      !allocate(this%std, source=std, stat=alloc_stat)
+      allocate(this%std(this%n_input), stat=alloc_stat)
       if (alloc_stat /= 0) error stop "allocation error in <in <initialize_InputLayer #2>"
+      this%std = std
    end subroutine initialize_InputLayer
 
    !-----------------------------------

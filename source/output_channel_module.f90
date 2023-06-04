@@ -110,8 +110,10 @@ contains
       this%n_input  = size(weights)
 
       if (allocated(this%weights)) deallocate(this%weights)
-      allocate(this%weights, source=weights, stat=alloc_stat)
+      !allocate(this%weights, source=weights, stat=alloc_stat)
+      allocate(this%weights(this%n_input), stat=alloc_stat)
       if (alloc_stat /= 0) error stop "allocation error in <in <initialize_OutputChannel>"
+      this%weights = weights
 
       this%bias           = bias
       this%transformation = transformation
