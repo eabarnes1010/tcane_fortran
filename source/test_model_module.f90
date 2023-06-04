@@ -57,7 +57,6 @@ module test_model_module
       type(Model) :: test_model
       type(Blueprint) :: details
 
-      !details = read_blueprint(".\data\intensity_shash3_test_blueprint.json")
       details = read_blueprint("./data/intensity_shash3_test_blueprint.json")
       call initialize(test_model, details)
    end subroutine test_shash3_case
@@ -69,7 +68,6 @@ module test_model_module
       type(Model) :: test_model
       type(Blueprint) :: details
 
-      !details = read_blueprint(".\data\track_bivariate_normal_test_blueprint.json")
       details = read_blueprint("./data/track_bivariate_normal_test_blueprint.json")
       call initialize(test_model, details)
    end subroutine test_bivariate_normal_case
