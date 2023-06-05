@@ -92,12 +92,16 @@ contains
       this%activation = activation
 
       if (allocated(this%weights)) deallocate(this%weights)
-      allocate(this%weights, source=weights, stat=alloc_stat)
+      !allocate(this%weights, source=weights, stat=alloc_stat)
+      allocate(this%weights(this%n_input, this%n_output), stat=alloc_stat)
       if (alloc_stat /= 0) error stop "allocation error in <initialize_HiddenLayer #1>"
+      this%weights = weights
 
       if (allocated(this%bias)) deallocate(this%bias)
-      allocate(this%bias, source=bias, stat=alloc_stat)
+      !allocate(this%bias, source=bias, stat=alloc_stat)
+      allocate(this%bias(this%n_output), stat=alloc_stat)
       if (alloc_stat /= 0) error stop "allocation error in <initialize_HiddenLayer #2>"
+      this%bias = bias
    end subroutine initialize_HiddenLayer
 
    !-----------------------------------

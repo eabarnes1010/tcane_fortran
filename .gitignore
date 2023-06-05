@@ -6,6 +6,7 @@ obj/
 *.cbp
 *.depend
 *.layout
+tcane_main.x
 
 # LaTeX stuff
 TeXAux/
