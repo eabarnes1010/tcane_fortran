@@ -1,3 +1,19 @@
+#==============================================================================
+# PROGRAM: Fortran makefile
+#
+# Authors
+# -------
+# Dr. Galina Chirokova
+# Cooperative Institute for Research in the Atmosphere
+# Colorado State University
+# Fort Collins, CO, 80523
+#
+# Version
+# -------
+# * 05 June 2023
+#
+#==============================================================================
+
 # Define the Fortran compiler
 FC = gfortran
 
