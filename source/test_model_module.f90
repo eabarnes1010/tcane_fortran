@@ -21,9 +21,14 @@
 ! Colorado State University
 ! Fort Collins, CO, 80523
 !
+! Dr. Galina Chirokova
+! Cooperative Institute for Research in the Atmosphere
+! Colorado State University
+! Fort Collins, CO, 80523
+!
 ! Version
 ! -------
-! * 03 November 2022
+! * 05 June 2023
 !
 !==============================================================================
 module test_model_module
